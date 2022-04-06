@@ -1,11 +1,11 @@
 import ply.lex as lex
 
 # Tokens
-tokens = ('PROGRAM', 'INT', 'FLOAT', 'IF', 'ELSE', 'PRINT', 'VAR',
-          'VAR_CTE_ID', 'VAR_CTE_INT', 'VAR_CTE_FLOAT', 'VAR_CTE_STRING',
-          'PLUS', 'MINUS', 'TIMES', 'DIV', 'LESS_THAN', 'GREATER_THAN',
-          'EQUAL', 'NOT_EQUAL', 'LEFT_PAR', 'RIGHT_PAR', 'LEFT_KEY',
-          'RIGHT_KEY', 'COMMA', 'COLON', 'SEMI_COLON')
+tokens = ('PROGRAM', 'FUNCTION', 'RETURN' 'INT', 'FLOAT', 'BOOL', 'STRING', 'IF', 'ELSE', 'PRINT', 'MAIN',
+          'VARS', 'VAR_CTE_ID', 'VAR_CTE_INT', 'VAR_CTE_FLOAT', 'VAR_CTE_STRING',
+          'PLUS', 'MINUS', 'TIMES', 'DIV', 'MOD', 'LESS_THAN', 'LESS_E_THAN', 'GREATER_THAN', 'GREATER_E_THAN'
+          'EQUAL', 'EQUALS', 'NOT_EQUALS', 'AND', 'OR', 'LEFT_PAR', 'RIGHT_PAR', 'LEFT_KEY',
+          'RIGHT_KEY', 'WHILE', 'FOR', 'VOID', 'COMMA', 'COLON', 'SEMI_COLON', 'END')
 
 # Ignored characters
 t_ignore = ' \t'
@@ -13,12 +13,21 @@ t_ignore = ' \t'
 # Reserved words 
 reserved = {
     'program': 'PROGRAM',
+    'vars': 'VARS',
+    'function': 'FUNCTION',
+    'return': 'RETURN',
+    'main': 'MAIN',
+    'void': 'VOID',
     'int': 'INT',
     'float': 'FLOAT',
+    'bool': 'BOOL',
+    'string': 'STRING',
     'if': 'IF',
     'else': 'ELSE',
+    'while': 'WHILE',
+    'for': 'FOR',
     'print': 'PRINT',
-    'var': 'VAR'
+    'end': 'END',
 }
 
 # Regular expressions
@@ -27,10 +36,16 @@ t_PLUS = r'\+'
 t_MINUS = r'\-'
 t_TIMES = r'\*'
 t_DIV = r'\/'
-t_LESS_THAN = r'\<'
-t_GREATER_THAN = r'\>'
+t_MOD = r'\%'
 t_EQUAL = r'\='
-t_NOT_EQUAL = r'\<\>'
+t_LESS_THAN = r'\<'
+t_LESS_E_THAN = r'\<\='
+t_GREATER_THAN = r'\>'
+t_GREATER_E_THAN = r'\>\='
+t_EQUALS = r'\=\='
+t_NOT_EQUALS = r'\<\>'
+t_AND = r'\&\&'
+t_OR = r'\|\|'
 t_LEFT_PAR = r'\('
 t_RIGHT_PAR = r'\)'
 t_LEFT_KEY = r'\{'
