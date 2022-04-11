@@ -4,8 +4,8 @@ import ply.lex as lex
 tokens = ('PROGRAM', 'FUNCTION', 'RETURN' 'INT', 'FLOAT', 'BOOL', 'STRING', 'IF', 'ELSE', 'PRINT', 'MAIN',
           'VARS', 'VAR_CTE_ID', 'VAR_CTE_INT', 'VAR_CTE_FLOAT', 'VAR_CTE_STRING',
           'PLUS', 'MINUS', 'TIMES', 'DIV', 'MOD', 'LESS_THAN', 'LESS_E_THAN', 'GREATER_THAN', 'GREATER_E_THAN'
-          'EQUAL', 'EQUALS', 'NOT_EQUALS', 'AND', 'OR', 'LEFT_PAR', 'RIGHT_PAR', 'LEFT_KEY',
-          'RIGHT_KEY', 'WHILE', 'FOR', 'VOID', 'COMMA', 'COLON', 'SEMI_COLON', 'END',
+          'EQUAL', 'EQUALS', 'NOT_EQUALS', 'AND', 'OR', 'LEFT_PAR', 'RIGHT_PAR', 'LEFT_KEY', 'RIGHT_KEY', 'LEFT_BRACK', 'RIGHT_BRACK',
+          'WHILE', 'FOR', 'VOID', 'COMMA', 'COLON', 'SEMI_COLON', 'END',
           'PENUP', 'PENDOWN', 'FORWARD', 'BACKWARD', 'TURNLEFT', 'TURNRIGHT', 'DRAWCIRCLE', 'DRAWRECTANGLE', 'DRAWARC')
 
 # Ignored characters
@@ -60,6 +60,8 @@ t_LEFT_PAR = r'\('
 t_RIGHT_PAR = r'\)'
 t_LEFT_KEY = r'\{'
 t_RIGHT_KEY = r'\}'
+t_LEFT_BRACK = r'\['
+t_RIGHT_BRACK = r'\]'
 t_COMMA = r'\,'
 t_COLON = r'\:'
 t_SEMI_COLON = r'\;'
