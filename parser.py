@@ -46,7 +46,7 @@ def p_vars_4(p):
 
 def p_vars_5(p):
     '''
-    vars_5 : LEFT_BRACK VAR_CTE_INT RIGHT_BRACK
+    vars_5 : LEFT_BRACK expression_1 RIGHT_BRACK
            | empty
     '''
 
@@ -300,13 +300,7 @@ def p_var_cte(p):
 
 def p_var_cte_aux_1(p):
     '''
-    var_cte_aux_1 : VAR_CTE_ID var_cte_aux_2
-    '''
-
-def p_var_cte_aux_2(p):
-    '''
-    var_cte_aux_2 : LEFT_BRACK VAR_CTE_INT RIGHT_BRACK
-                  | empty
+    var_cte_aux_1 : VAR_CTE_ID vars_5
     '''
 
 # Error handling
