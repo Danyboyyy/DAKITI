@@ -39,6 +39,7 @@ def p_vars_3(p):
     '''
     vars_3 : VAR_CTE_ID COMMA vars_3
            | VAR_CTE_ID SEMI_COLON vars_2
+           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK COMMA vars_3
            | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK SEMI_COLON vars_2
     '''
 
@@ -281,7 +282,7 @@ def p_while_loop(p):
 
 def p_for_loop(p):
     '''
-    for_loop : FOR LEFT_PAR VAR_CTE_ID IN RANGE LEFT_PAR VAR_CTE_FLOAT COMMA VAR_CTE_FLOAT RIGHT_PAR RIGHT_PAR body_1
+    for_loop : FOR LEFT_PAR VAR_CTE_ID IN RANGE LEFT_PAR VAR_CTE_INT COMMA VAR_CTE_INT RIGHT_PAR RIGHT_PAR body_1
     '''
 
 # VAR_CTE
@@ -295,11 +296,6 @@ def p_var_cte(p):
             | FALSE
             | function_call_1
     '''
-
-# def p_var_cte_aux_1(p):
-#     '''
-#     var_cte_aux_1 : VAR_CTE_ID vars_5
-#     '''
 
 # Error handling
 def p_error(p):
