@@ -9,6 +9,7 @@ def p_program_1(p):
     '''
     program_1 : PROGRAM VAR_CTE_ID SEMI_COLON program_vars program_functions MAIN body_1 END
     '''
+    print('Compiled succesfully!')
 
 def p_program_vars(p):
     '''
@@ -30,30 +31,15 @@ def p_vars_1(p):
 
 def p_vars_2(p):
     '''
-    vars_2 : type vars_4
+    vars_2 : type vars_3
            | empty
     '''
 
 def p_vars_3(p):
     '''
-    vars_3 : VAR_CTE_ID vars_5 vars_6
-    '''
-
-def p_vars_4(p):
-    '''
-    vars_4 : vars_3 SEMI_COLON vars_2
-    '''
-
-def p_vars_5(p):
-    '''
-    vars_5 : LEFT_BRACK expression_1 RIGHT_BRACK
-           | empty
-    '''
-
-def p_vars_6(p):
-    '''
-    vars_6 : COMMA vars_3
-           | empty
+    vars_3 : VAR_CTE_ID COMMA vars_3
+           | VAR_CTE_ID SEMI_COLON vars_2
+           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK SEMI_COLON vars_2
     '''
 
 # FUNCTIONS
@@ -92,7 +78,7 @@ def p_arguments_3(p):
 
 def p_return(p):
     '''
-    return : RETURN LEFT_PAR expression_1 RIGHT_PAR SEMI_COLON
+    return : RETURN LEFT_PAR hyper_expression_1 RIGHT_PAR SEMI_COLON
     '''
 
 # TYPE
@@ -129,7 +115,8 @@ def p_statements(p):
 # ASSIGNMENT
 def p_assignment_1(p):
     '''
-    assignment_1 : VAR_CTE_ID EQUAL expression_1 SEMI_COLON
+    assignment_1 : VAR_CTE_ID EQUAL hyper_expression_1 SEMI_COLON
+                 | VAR_CTE_ID LEFT_BRACK hyper_expression_1 RIGHT_BRACK EQUAL hyper_expression_1 SEMI_COLON
     '''
 
 # FUNCTION CALL
@@ -157,7 +144,7 @@ def p_function_call_arguments_1(p):
 
 def p_function_call_arguments_2(p):
     '''
-    function_call_arguments_2 : expression_1 function_call_arguments_3
+    function_call_arguments_2 : hyper_expression_1 function_call_arguments_3
     '''
 
 def p_function_call_arguments_3(p):
@@ -187,7 +174,7 @@ def p_writting_1(p):
 
 def p_writting_2(p):
     '''
-    writting_2 : expression_1 writting_3
+    writting_2 : hyper_expression_1 writting_3
                | VAR_CTE_STRING writting_3
     '''
 
@@ -198,6 +185,18 @@ def p_writting_3(p):
     '''
 
 # EXPRESSION
+def p_hyper_expression_1(p):
+    '''
+    hyper_expression_1 : expression_1 hyper_expression_2
+    '''
+
+def p_hyper_expression_2(p):
+    '''
+    hyper_expression_2 : AND expression_1
+                       | OR expression_1
+                       | empty
+    '''
+
 def p_expression_1(p):
     '''
     expression_1 : exp_1 expression_2
@@ -211,8 +210,6 @@ def p_expression_2(p):
                  | LESS_E_THAN exp_1
                  | NOT_EQUALS exp_1
                  | EQUALS exp_1
-                 | AND exp_1
-                 | OR exp_1
                  | empty
     '''
 
@@ -260,7 +257,7 @@ def p_factor_2(p):
 # CONDITION
 def p_condition_1(p):
     '''
-    condition_1 : IF LEFT_PAR expression_1 RIGHT_PAR body_1 condition_2
+    condition_1 : IF LEFT_PAR hyper_expression_1 RIGHT_PAR body_1 condition_2
     '''
 
 def p_condition_2(p):
@@ -279,7 +276,7 @@ def p_loops(p):
 
 def p_while_loop(p):
     '''
-    while_loop : WHILE LEFT_PAR expression_1 RIGHT_PAR body_1
+    while_loop : WHILE LEFT_PAR hyper_expression_1 RIGHT_PAR body_1
     '''
 
 def p_for_loop(p):
@@ -290,7 +287,8 @@ def p_for_loop(p):
 # VAR_CTE
 def p_var_cte(p):
     '''
-    var_cte : var_cte_aux_1
+    var_cte : VAR_CTE_ID
+            | VAR_CTE_ID LEFT_BRACK hyper_expression_1 RIGHT_BRACK
             | VAR_CTE_INT
             | VAR_CTE_FLOAT
             | TRUE
@@ -298,10 +296,10 @@ def p_var_cte(p):
             | function_call_1
     '''
 
-def p_var_cte_aux_1(p):
-    '''
-    var_cte_aux_1 : VAR_CTE_ID vars_5
-    '''
+# def p_var_cte_aux_1(p):
+#     '''
+#     var_cte_aux_1 : VAR_CTE_ID vars_5
+#     '''
 
 # Error handling
 def p_error(p):
