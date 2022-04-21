@@ -1,4 +1,6 @@
 import sys
+import re
+from os import path
 import ply.yacc as yacc
 from lexer import tokens
 
@@ -309,15 +311,17 @@ def p_empty(p):
 yacc.yacc()
 
 if __name__ == '__main__':
-    if len(sys.argv) == 2:
+    try:
+        if not len(sys.argv) == 2:
+            sys.exit("Try running the following command: python parser.py name_of_file.dak")
         file = sys.argv[1]
-
-        try:
-            ifFile = open(file, 'r')
-            data = ifFile.read()
-            ifFile.close()
-            print(yacc.parse(data))
-        except:
-            print("Error opening the file!")
-    else:
-        print("Try running the following command: python parser.py name_of_file.txt")
+        if not re.match("(.*?)\.(dak)$", file):
+            sys.exit("File should be a .dak file!")
+        if not path.isfile(file):
+            sys.exit("Cannot find the file!" + file)
+        ifFile = open(file, 'r')
+        data = ifFile.read()
+        ifFile.close()
+        print(yacc.parse(data))
+    except EOFError:
+        print("Error, try again!")
