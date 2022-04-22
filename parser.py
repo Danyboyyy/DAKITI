@@ -330,6 +330,7 @@ def p_empty(p):
     pass
 
 ##### NEURALGIC POINTS #####
+# Starting the program
 def p_np_program_start(p):
     'np_program_start :'
     global currentFunction
@@ -339,9 +340,11 @@ def p_np_program_start(p):
 
     vars_table[program] = {'type': 'void', 'vars': {}}
 
+# Ending the program
 def p_np_program_end(p):
     'np_program_end :'
 
+# Adding a function to the functions directory
 def p_np_add_function(p):
     'np_add_function :'
     global currentFunction, currentFunctionType
@@ -351,16 +354,19 @@ def p_np_add_function(p):
     else:
         showError('Function already declared!')
 
+# Storing a variable's type
 def p_np_current_type(p):
     'np_current_type :'
     global currentType
     currentType = p[-1]
 
+# Storgin a function's type
 def p_np_current_function_type(p):
     'np_current_function_type :'
     global currentFunctionType
     currentFunctionType = p[-1]
 
+# Adding a variable to the symbols table
 def p_np_add_variable(p):
     'np_add_variable :'
     global currentType, currentVar
@@ -371,6 +377,7 @@ def p_np_add_variable(p):
     else:
         showError('Variable already declared!')
 
+# Adding an array to the symbols table
 def p_np_add_array(p):
     'np_add_array :'
     global currentType, currentVar, currentArrayTam
@@ -382,6 +389,7 @@ def p_np_add_array(p):
     else:
         showError('Variable already declared!')
 
+# Adding a function's parameters to its symbol table
 def p_np_function_parameters(p):
     'np_function_parameters :'
     global currentFunction, currentVar, currentType
@@ -393,7 +401,6 @@ def p_np_function_parameters(p):
         showError('Variable already declared!')
 
 yacc.yacc()
-
 
 ##### PROGRAM EXECUTION #####
 if __name__ == '__main__':
