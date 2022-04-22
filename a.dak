@@ -1,7 +1,7 @@
 program test;
 
 vars
-    int a[10], b, c[10];
+    int a[10], b, c;
     float x, y, z;
     bool f, t;
     string str;

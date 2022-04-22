@@ -3,15 +3,35 @@ import re
 from os import path
 import ply.yacc as yacc
 from lexer import tokens
+from queue import Queue, LifoQueue
 
-# Grammar rules
+vars_table = {} # Variables Table
 
+currentFunction = ''
+currentFunctionType = ''
+currentType = ''
+currentVar = ''
+currentArrayTam = 0
+
+def displayVarsTable():
+    for func in vars_table:
+        print(func)
+        for var in vars_table[func]['vars']:
+            print(vars_table[func]['vars'][var]['type'], var)
+        print('\n')
+
+def showError(msg):
+    print(msg)
+    sys.exit()
+
+###### PARSER #####
 # PROGRAM
 def p_program_1(p):
     '''
-    program_1 : PROGRAM VAR_CTE_ID SEMI_COLON program_vars program_functions MAIN body_1 END
+    program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN body_1 END np_program_end
     '''
     print('Compiled succesfully!')
+    displayVarsTable()
 
 def p_program_vars(p):
     '''
@@ -21,11 +41,11 @@ def p_program_vars(p):
 
 def p_program_functions(p):
     '''
-    program_functions : functions
+    program_functions : functions_1
                       | empty
     '''
 
-# VARS
+# VARIABLES
 def p_vars_1(p):
     '''
     vars_1 : VARS vars_2
@@ -39,27 +59,21 @@ def p_vars_2(p):
 
 def p_vars_3(p):
     '''
-    vars_3 : VAR_CTE_ID COMMA vars_3
-           | VAR_CTE_ID SEMI_COLON vars_2
-           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK COMMA vars_3
-           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK SEMI_COLON vars_2
+    vars_3 : VAR_CTE_ID np_add_variable COMMA vars_3
+           | VAR_CTE_ID np_add_variable SEMI_COLON vars_2
+           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK np_add_array COMMA vars_3
+           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK np_add_array SEMI_COLON vars_2
     '''
 
 # FUNCTIONS
-def p_functions(p):
+def p_functions_1(p):
     '''
-    functions : functions_t program_functions
-              | functions_v program_functions
-    '''
-
-def p_functions_t(p):
-    '''
-    functions_t : FUNCTION type VAR_CTE_ID LEFT_PAR arguments_1 RIGHT_PAR LEFT_KEY program_vars statements return RIGHT_KEY
+    functions_1 :  functions_2 program_functions
     '''
 
-def p_functions_v(p):
+def p_functions_2(p):
     '''
-    functions_v : FUNCTION VOID VAR_CTE_ID LEFT_PAR arguments_1 RIGHT_PAR LEFT_KEY program_vars statements RIGHT_KEY
+    functions_2 : FUNCTION function_type VAR_CTE_ID np_add_function LEFT_PAR arguments_1 RIGHT_PAR LEFT_KEY program_vars statements return RIGHT_KEY
     '''
 
 def p_arguments_1(p):
@@ -70,7 +84,7 @@ def p_arguments_1(p):
 
 def p_arguments_2(p):
     '''
-    arguments_2 : type VAR_CTE_ID arguments_3
+    arguments_2 : type VAR_CTE_ID np_function_parameters arguments_3
     '''
 
 def p_arguments_3(p):
@@ -82,18 +96,28 @@ def p_arguments_3(p):
 def p_return(p):
     '''
     return : RETURN LEFT_PAR hyper_expression_1 RIGHT_PAR SEMI_COLON
+           | empty
     '''
 
-# TYPE
+# TYPES
 def p_type(p):
     '''
-    type : INT
-         | FLOAT
-         | BOOL
-         | STRING
+    type : INT np_current_type
+         | FLOAT np_current_type
+         | BOOL np_current_type
+         | STRING np_current_type
     '''
 
-# BLOQUE
+def p_function_type(p):
+    '''
+    function_type : INT np_current_function_type
+                  | FLOAT np_current_function_type
+                  | BOOL np_current_function_type
+                  | STRING np_current_function_type
+                  | VOID np_current_function_type
+    '''
+
+# BLOCK OF CODE
 def p_body_1(p):
     '''
     body_1 : LEFT_KEY body_2 RIGHT_KEY
@@ -122,7 +146,7 @@ def p_assignment_1(p):
                  | VAR_CTE_ID LEFT_BRACK hyper_expression_1 RIGHT_BRACK EQUAL hyper_expression_1 SEMI_COLON
     '''
 
-# FUNCTION CALL
+# FUNCTION CALLS
 def p_function_call_1(p):
     '''
     function_call_1 : function_call_name LEFT_PAR function_call_arguments_1 RIGHT_PAR
@@ -169,7 +193,7 @@ def p_built_in_functions(p):
                        | DRAWARC
     '''
 
-# WRITTIG
+# WRITTING
 def p_writting_1(p):
     '''
     writting_1 : PRINT LEFT_PAR writting_2 RIGHT_PAR SEMI_COLON
@@ -187,7 +211,7 @@ def p_writting_3(p):
                | empty
     '''
 
-# EXPRESSION
+# EXPRESSIONS
 def p_hyper_expression_1(p):
     '''
     hyper_expression_1 : expression_1 hyper_expression_2
@@ -216,7 +240,6 @@ def p_expression_2(p):
                  | empty
     '''
 
-# EXP
 def p_exp_1(p):
     '''
     exp_1 : term_1 exp_2
@@ -229,7 +252,6 @@ def p_exp_2(p):
           | empty
     '''
 
-# TERM
 def p_term_1(p):
     '''
     term_1 : factor_1 term_2
@@ -243,7 +265,6 @@ def p_term_2(p):
            | empty
     '''
 
-# FACTOR
 def p_factor_1(p):
     '''
     factor_1 : LEFT_PAR expression_1 RIGHT_PAR
@@ -257,7 +278,7 @@ def p_factor_2(p):
              | empty
     '''
 
-# CONDITION
+# CONDITIONALS
 def p_condition_1(p):
     '''
     condition_1 : IF LEFT_PAR hyper_expression_1 RIGHT_PAR body_1 condition_2
@@ -287,7 +308,7 @@ def p_for_loop(p):
     for_loop : FOR LEFT_PAR VAR_CTE_ID IN RANGE LEFT_PAR VAR_CTE_INT COMMA VAR_CTE_INT RIGHT_PAR RIGHT_PAR body_1
     '''
 
-# VAR_CTE
+# CONSTANT VARIABLES
 def p_var_cte(p):
     '''
     var_cte : VAR_CTE_ID
@@ -303,13 +324,78 @@ def p_var_cte(p):
 def p_error(p):
     print(f'Syntax error at {p.value!r}')
 
-# Empty
+# Empty production
 def p_empty(p):
     'empty :'
     pass
 
+##### NEURALGIC POINTS #####
+def p_np_program_start(p):
+    'np_program_start :'
+    global currentFunction
+
+    program = p[-1]
+    currentFunction = program
+
+    vars_table[program] = {'type': 'void', 'vars': {}}
+
+def p_np_program_end(p):
+    'np_program_end :'
+
+def p_np_add_function(p):
+    'np_add_function :'
+    global currentFunction, currentFunctionType
+    currentFunction = p[-1]
+    if currentFunction not in vars_table:
+        vars_table[currentFunction] = {'type': currentFunctionType, 'vars': {}}
+    else:
+        showError('Function already declared!')
+
+def p_np_current_type(p):
+    'np_current_type :'
+    global currentType
+    currentType = p[-1]
+
+def p_np_current_function_type(p):
+    'np_current_function_type :'
+    global currentFunctionType
+    currentFunctionType = p[-1]
+
+def p_np_add_variable(p):
+    'np_add_variable :'
+    global currentType, currentVar
+    currentVar = p[-1]
+    
+    if currentVar not in vars_table[currentFunction]['vars']:
+        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType}
+    else:
+        showError('Variable already declared!')
+
+def p_np_add_array(p):
+    'np_add_array :'
+    global currentType, currentVar, currentArrayTam
+    currentVar = p[-4]
+    currentArrayTam = p[-2]
+
+    if currentVar not in vars_table[currentFunction]['vars']:
+        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'size': currentArrayTam}
+    else:
+        showError('Variable already declared!')
+
+def p_np_function_parameters(p):
+    'np_function_parameters :'
+    global currentFunction, currentVar, currentType
+    currentVar = p[-1]
+
+    if currentVar not in vars_table[currentFunction]['vars']:
+        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType}
+    else:
+        showError('Variable already declared!')
+
 yacc.yacc()
 
+
+##### PROGRAM EXECUTION #####
 if __name__ == '__main__':
     try:
         if not len(sys.argv) == 2:

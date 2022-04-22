@@ -1,5 +1,6 @@
 import ply.lex as lex
 
+###### LEXER #####
 # Tokens
 tokens = ('PROGRAM', 'FUNCTION', 'RETURN', 'INT', 'FLOAT', 'BOOL', 'STRING', 'IF', 'ELSE', 'PRINT', 'MAIN',
           'VARS', 'VAR_CTE_ID', 'VAR_CTE_INT', 'VAR_CTE_FLOAT', 'VAR_CTE_STRING', 'TRUE', 'FALSE',
