@@ -7,6 +7,7 @@ vars
     string str;
 
 function void function1(int n, int m) {
+    a = a+b;
     print(n + m);
 }
 

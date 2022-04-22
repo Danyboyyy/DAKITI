@@ -73,7 +73,7 @@ def p_functions_1(p):
 
 def p_functions_2(p):
     '''
-    functions_2 : FUNCTION function_type VAR_CTE_ID np_add_function LEFT_PAR arguments_1 RIGHT_PAR LEFT_KEY program_vars statements return RIGHT_KEY
+    functions_2 : FUNCTION function_type VAR_CTE_ID np_add_function LEFT_PAR arguments_1 RIGHT_PAR LEFT_KEY program_vars body_2 return RIGHT_KEY
     '''
 
 def p_arguments_1(p):
