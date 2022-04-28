@@ -4,13 +4,15 @@ from os import path
 import ply.yacc as yacc
 from lexer import tokens
 from queue import Queue, LifoQueue
+from SemanticCube import semantic_cube
 
 vars_table = {} # Variables Table
+cuadruples = [] # Cuadrulpes List
 
 currentFunction = ''
 currentFunctionType = ''
-currentType = ''
 currentVar = ''
+currentType = ''
 currentArrayTam = 0
 
 def displayVarsTable():
