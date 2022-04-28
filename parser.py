@@ -30,8 +30,8 @@ def p_program_1(p):
     '''
     program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN body_1 END np_program_end
     '''
-    print('Compiled succesfully!')
     displayVarsTable()
+    print('Compiled succesfully!')
 
 def p_program_vars(p):
     '''
@@ -407,14 +407,19 @@ if __name__ == '__main__':
     try:
         if not len(sys.argv) == 2:
             sys.exit("Try running the following command: python parser.py name_of_file.dak")
+
         file = sys.argv[1]
+
         if not re.match("(.*?)\.(dak)$", file):
             sys.exit("File should be a .dak file!")
+
         if not path.isfile(file):
             sys.exit("Cannot find the file!" + file)
+
         ifFile = open(file, 'r')
         data = ifFile.read()
         ifFile.close()
-        print(yacc.parse(data))
+
+        yacc.parse(data)
     except EOFError:
         print("Error, try again!")
