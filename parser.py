@@ -11,24 +11,23 @@ from Cuadruple import *
 vars_table = {} # Variables Table
 cuadruples = [] # Cuadrulpes List
 
+# Memory Simulation
 memory = ['t' + str(x) for x in range(1, 100)]
 idx = 0
 
-operatorsStack = deque()
-operandsStack = deque()
-typesStack = deque()
-jumpsStack = deque()
+# Stacks for building cuadruples
+operatorsStack = deque() # Operators stack
+operandsStack = deque() # Operands stack
+typesStack = deque() # Types stack
+jumpsStack = deque() # Jumps stack
 
+# Variables
 programName = ''
 currentFunction = ''
 currentFunctionType = ''
 currentVar = ''
 currentType = ''
 currentArrayTam = 0
-
-def showError(msg):
-    print(msg)
-    sys.exit()
 
 ###### PARSER #####
 # PROGRAM
@@ -278,6 +277,18 @@ def p_factor_1(p):
              | var_cte
     '''
 
+# CONSTANT VARIABLES
+def p_var_cte(p):
+    '''
+    var_cte : VAR_CTE_ID np_add_id
+            | VAR_CTE_ID LEFT_BRACK hyper_expression_1 RIGHT_BRACK
+            | VAR_CTE_INT np_add_int
+            | VAR_CTE_FLOAT np_add_float
+            | TRUE np_add_bool
+            | FALSE np_add_bool
+            | function_call_1
+    '''
+
 # CONDITIONALS
 def p_condition_1(p):
     '''
@@ -306,18 +317,6 @@ def p_while_loop(p):
 def p_for_loop(p):
     '''
     for_loop : FOR LEFT_PAR VAR_CTE_ID IN RANGE LEFT_PAR VAR_CTE_INT COMMA VAR_CTE_INT RIGHT_PAR RIGHT_PAR body_1
-    '''
-
-# CONSTANT VARIABLES
-def p_var_cte(p):
-    '''
-    var_cte : VAR_CTE_ID np_add_id
-            | VAR_CTE_ID LEFT_BRACK hyper_expression_1 RIGHT_BRACK
-            | VAR_CTE_INT np_add_int
-            | VAR_CTE_FLOAT np_add_float
-            | TRUE np_add_bool
-            | FALSE np_add_bool
-            | function_call_1
     '''
 
 # Error handling
@@ -354,13 +353,18 @@ def p_np_add_function(p):
     if currentFunction not in vars_table:
         vars_table[currentFunction] = {'type': currentFunctionType, 'vars': {}}
     else:
-        showError(f'Function \'{currentFunction}\' has already beendeclared!')
+        utils.showError(f'Function \'{currentFunction}\' has already beendeclared!')
 
-# Storing a variable's type
-def p_np_current_type(p):
-    'np_current_type :'
-    global currentType
-    currentType = p[-1]
+# Adding a function's parameters to its symbol table
+def p_np_function_parameters(p):
+    'np_function_parameters :'
+    global currentFunction, currentVar, currentType
+    currentVar = p[-1]
+
+    if currentVar not in vars_table[currentFunction]['vars']:
+        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType}
+    else:
+        utils.showError(f'Variable \'{currentVar}\' has already been declared!')
 
 # Storing a function's type
 def p_np_current_function_type(p):
@@ -377,7 +381,7 @@ def p_np_add_variable(p):
     if currentVar not in vars_table[currentFunction]['vars']:
         vars_table[currentFunction]['vars'][currentVar] = {'type': currentType}
     else:
-        showError(f'Variable \'{currentVar}\' has already been declared!')
+        utils.showError(f'Variable \'{currentVar}\' has already been declared!')
 
 # Adding an array to the symbols table
 def p_np_add_array(p):
@@ -389,18 +393,13 @@ def p_np_add_array(p):
     if currentVar not in vars_table[currentFunction]['vars']:
         vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'size': currentArrayTam}
     else:
-        showError(f'Variable \'{currentVar}\' has already been declared!')
+        utils.showError(f'Variable \'{currentVar}\' has already been declared!')
 
-# Adding a function's parameters to its symbol table
-def p_np_function_parameters(p):
-    'np_function_parameters :'
-    global currentFunction, currentVar, currentType
-    currentVar = p[-1]
-
-    if currentVar not in vars_table[currentFunction]['vars']:
-        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType}
-    else:
-        showError(f'Variable \'{currentVar}\' has already been declared!')
+# Storing a variable's type
+def p_np_current_type(p):
+    'np_current_type :'
+    global currentType
+    currentType = p[-1]
 
 # Adding operator to the operators stack
 def p_np_add_operator(p):
@@ -409,12 +408,14 @@ def p_np_add_operator(p):
     operator = p[-1]
     operatorsStack.append(operator)
 
+# Add fake bottom
 def p_np_add_bottom(p):
     'np_add_bottom :'
     global operatorsStack
     operator = p[-1]
     operatorsStack.append(operator)
 
+# Removing fake bottom
 def p_np_remove_bottom(p):
     'np_remove_bottom :'
     global operatorsStack
@@ -432,7 +433,7 @@ def p_np_add_id(p):
         operandsStack.append(varId)
         typesStack.append(vars_table[programName]['vars'][varId]['type'])
     else:
-        showError(f'Variable \'{varId}\' has not been declared!')
+        utils.showError(f'Variable \'{varId}\' has not been declared!')
 
 # Add int to the operands stack and type to the types stack
 def p_np_add_int(p):
@@ -470,7 +471,7 @@ def p_np_hyper_expression(p):
             resultType = semantic_cube[leftType][rightType][operator]
 
             if resultType == 'error':
-                showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
+                utils.showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
             else:
                 cuadruples.append(Cuadruple(operator, left, right, memory[idx]))
                 operandsStack.append(memory[idx])
@@ -492,7 +493,7 @@ def p_np_expression(p):
             resultType = semantic_cube[leftType][rightType][operator]
 
             if resultType == 'error':
-                showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
+                utils.showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
             else:
                 cuadruples.append(Cuadruple(operator, left, right, memory[idx]))
                 operandsStack.append(memory[idx])
@@ -514,7 +515,7 @@ def p_np_exp(p):
             resultType = semantic_cube[leftType][rightType][operator]
 
             if resultType == 'error':
-                showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
+                utils.showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
             else:
                 cuadruples.append(Cuadruple(operator, left, right, memory[idx]))
                 operandsStack.append(memory[idx])
@@ -536,7 +537,7 @@ def p_np_term(p):
             resultType = semantic_cube[leftType][rightType][operator]
 
             if resultType == 'error':
-                showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
+                utils.showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
             else:
                 cuadruples.append(Cuadruple(operator, left, right, memory[idx]))
                 operandsStack.append(memory[idx])
@@ -555,7 +556,7 @@ def p_np_assignment(p):
     operator = operatorsStack.pop()
 
     if leftType != rightType:
-        showError(f'Cannot assign a(n) \'{leftType}\' to a(n) \'{rightType}\'!')
+        utils.showError(f'Cannot assign a(n) \'{leftType}\' to a(n) \'{rightType}\'!')
     else:
         cuadruples.append(Cuadruple(operator, left, None, right))
 

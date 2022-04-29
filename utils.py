@@ -1,3 +1,9 @@
+import sys
+
+def showError(msg):
+    print(msg)
+    sys.exit()
+
 def displayVarsTable(vars_table):
     for func in vars_table:
         print(func)
@@ -18,4 +24,3 @@ def displayStack(stack):
     for el in stack:
         print(el)
     print('************************')
-
