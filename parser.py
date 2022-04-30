@@ -5,8 +5,8 @@ import ply.yacc as yacc
 from lexer import tokens
 from collections import deque
 from SemanticCube import semantic_cube
-import utils
 from Cuadruple import *
+import utils
 
 vars_table = {} # Variables Table
 cuadruples = [] # Cuadrulpes List
