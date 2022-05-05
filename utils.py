@@ -12,7 +12,7 @@ def displayVarsTable(vars_table):
         print('\n')
 
 def displayCuadruples(cuadruples):
-    idx = 1
+    idx = 0
     for c in cuadruples:
         print(f'{idx}: {c.operator}, {c.op1}, {c.op2}, {c.res}')
         idx += 1

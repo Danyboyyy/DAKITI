@@ -292,13 +292,13 @@ def p_var_cte(p):
 # CONDITIONALS
 def p_condition_1(p):
     '''
-    condition_1 : IF LEFT_PAR hyper_expression_1 RIGHT_PAR body_1 condition_2
+    condition_1 : IF LEFT_PAR hyper_expression_1 RIGHT_PAR np_if_start body_1 condition_2 np_if_end
     '''
 
 def p_condition_2(p):
     '''
-    condition_2 : ELSE condition_1
-                | ELSE body_1
+    condition_2 : ELSE np_else IF LEFT_PAR hyper_expression_1 RIGHT_PAR np_if_start body_1 condition_2 np_if_end
+                | ELSE np_else body_1
                 | empty
     '''
 
@@ -311,7 +311,7 @@ def p_loops(p):
 
 def p_while_loop(p):
     '''
-    while_loop : WHILE LEFT_PAR hyper_expression_1 RIGHT_PAR body_1
+    while_loop : WHILE np_while_start LEFT_PAR hyper_expression_1 RIGHT_PAR np_while_mid body_1 np_while_end
     '''
 
 def p_for_loop(p):
@@ -573,6 +573,64 @@ def p_np_writting_strings(p):
     global cuadruples
     string = p[-1]
     cuadruples.append(Cuadruple('print', None, None, string))
+
+# Handle conditionals
+def p_np_if_start(p):
+    'np_if_start :'
+    global cuadruples, typesStack, operandsStack, jumpsStack
+
+    type = typesStack[-1]
+    result = operandsStack[-1]
+
+    if (type != 'bool'):
+        utils.showError('Expression must return a bool!')
+
+    cuadruples.append(Cuadruple('GOTOF', result, None, 0))
+    jumpsStack.append(len(cuadruples) - 1)
+
+def p_np_else(p):
+    'np_else :'
+    global cuadruples, jumpsStack
+
+    cuadruples.append(Cuadruple('GOTO', None, None, 0))
+    jump = jumpsStack.pop()
+    jumpsStack.append(len(cuadruples) - 1)
+    cuadruples[jump].res = len(cuadruples)
+
+def p_np_if_end(p):
+    'np_if_end :'
+    global cuadruples, jumpsStack
+
+    jump = jumpsStack.pop()
+    cuadruples[jump].res = len(cuadruples)
+    
+# Handle while loop
+def p_np_while_start(p):
+    'np_while_start :'
+    global cuadruples, jumpsStack
+
+    jumpsStack.append(len(cuadruples))
+
+def p_np_while_mid(p):
+    'np_while_mid :'
+    global cuadruples, typesStack, operandsStack, jumpsStack
+
+    type = typesStack[-1]
+    result = operandsStack[-1]
+
+    if (type != 'bool'):
+        utils.showError('Expression must return a bool!')
+
+    cuadruples.append(Cuadruple('GOTOF', result, None, 0))
+    jumpsStack.append(len(cuadruples) - 1)
+
+def p_np_while_end(p):
+    'np_while_end :'
+    end = jumpsStack.pop()
+    start = jumpsStack.pop()
+
+    cuadruples.append(Cuadruple('GOTO', None, None, start))
+    cuadruples[end].res = len(cuadruples)
 
 yacc.yacc()
 
