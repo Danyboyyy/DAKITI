@@ -1,3 +1,9 @@
+import sys
+
+def showError(msg):
+    print(msg)
+    sys.exit()
+
 def displayVarsTable(vars_table):
     for func in vars_table:
         print(func)
@@ -6,7 +12,7 @@ def displayVarsTable(vars_table):
         print('\n')
 
 def displayCuadruples(cuadruples):
-    idx = 1
+    idx = 0
     for c in cuadruples:
         print(f'{idx}: {c.operator}, {c.op1}, {c.op2}, {c.res}')
         idx += 1
@@ -18,4 +24,3 @@ def displayStack(stack):
     for el in stack:
         print(el)
     print('************************')
-
