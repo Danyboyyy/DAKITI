@@ -29,6 +29,10 @@ currentVar = ''
 currentType = ''
 currentArrayTam = 0
 
+# For aux
+controlVar = 0
+finalVar = 0
+
 ###### PARSER #####
 # PROGRAM
 def p_program_1(p):
@@ -316,7 +320,7 @@ def p_while_loop(p):
 
 def p_for_loop(p):
     '''
-    for_loop : FOR LEFT_PAR VAR_CTE_ID IN RANGE LEFT_PAR VAR_CTE_INT COMMA VAR_CTE_INT RIGHT_PAR RIGHT_PAR body_1
+    for_loop : FOR LEFT_PAR VAR_CTE_ID np_for_start IN RANGE LEFT_PAR VAR_CTE_INT np_for_range_start COMMA VAR_CTE_INT np_for_range_end RIGHT_PAR RIGHT_PAR body_1 np_for_end
     '''
 
 # Error handling
@@ -349,6 +353,7 @@ def p_np_program_end(p):
 def p_np_add_function(p):
     'np_add_function :'
     global currentFunction, currentFunctionType
+
     currentFunction = p[-1]
     if currentFunction not in vars_table:
         vars_table[currentFunction] = {'type': currentFunctionType, 'vars': {}}
@@ -359,6 +364,7 @@ def p_np_add_function(p):
 def p_np_function_parameters(p):
     'np_function_parameters :'
     global currentFunction, currentVar, currentType
+
     currentVar = p[-1]
 
     if currentVar not in vars_table[currentFunction]['vars']:
@@ -370,12 +376,14 @@ def p_np_function_parameters(p):
 def p_np_current_function_type(p):
     'np_current_function_type :'
     global currentFunctionType
+
     currentFunctionType = p[-1]
 
 # Adding a variable to the symbols table
 def p_np_add_variable(p):
     'np_add_variable :'
     global currentType, currentVar
+
     currentVar = p[-1]
     
     if currentVar not in vars_table[currentFunction]['vars']:
@@ -387,6 +395,7 @@ def p_np_add_variable(p):
 def p_np_add_array(p):
     'np_add_array :'
     global currentType, currentVar, currentArrayTam
+
     currentVar = p[-4]
     currentArrayTam = p[-2]
 
@@ -399,12 +408,14 @@ def p_np_add_array(p):
 def p_np_current_type(p):
     'np_current_type :'
     global currentType
+
     currentType = p[-1]
 
 # Adding operator to the operators stack
 def p_np_add_operator(p):
     'np_add_operator :'
     global operatorsStack
+
     operator = p[-1]
     operatorsStack.append(operator)
 
@@ -412,6 +423,7 @@ def p_np_add_operator(p):
 def p_np_add_bottom(p):
     'np_add_bottom :'
     global operatorsStack
+
     operator = p[-1]
     operatorsStack.append(operator)
 
@@ -419,47 +431,60 @@ def p_np_add_bottom(p):
 def p_np_remove_bottom(p):
     'np_remove_bottom :'
     global operatorsStack
+
     operatorsStack.pop()
 
-# Add id to the operands stack and type to the typs stack
+# Add id to the operands stack and type to the types stack
 def p_np_add_id(p):
     'np_add_id :'
     global currentFunction, programName
-    varId = p[-1]
-    if varId in vars_table[currentFunction]['vars']:
-        operandsStack.append(varId)
-        typesStack.append(vars_table[currentFunction]['vars'][varId]['type'])
-    elif varId in vars_table[programName]['vars']:
-        operandsStack.append(varId)
-        typesStack.append(vars_table[programName]['vars'][varId]['type'])
+    
+    operand = p[-1]
+
+    if operand in vars_table[currentFunction]['vars']:
+        operandsStack.append(operand)
+        typesStack.append(vars_table[currentFunction]['vars'][operand]['type'])
+    elif operand in vars_table[programName]['vars']:
+        operandsStack.append(operand)
+        typesStack.append(vars_table[programName]['vars'][operand]['type'])
     else:
-        utils.showError(f'Variable \'{varId}\' has not been declared!')
+        utils.showError(f'Variable \'{operand}\' has not been declared!')
 
 # Add int to the operands stack and type to the types stack
 def p_np_add_int(p):
     'np_add_int :'
     global operandsStack, typesStack
-    operandsStack.append(p[-1])
+
+    operand = p[-1]
+
+    operandsStack.append(operand)
     typesStack.append('int')
 
 # Add flaot to the operands stack and type to the types stack
 def p_np_add_float(p):
     'np_add_float :'
     global operandsStack, typesStack
-    operandsStack.append(p[-1])
+
+    operand = p[-1]
+
+    operandsStack.append(operand)
     typesStack.append('float')
 
 # Add bool to the operands stack and type to the types stack
 def p_np_add_bool(p):
     'np_add_bool :'
     global operandsStack, typesStack
-    operandsStack.append(p[-1])
+
+    operand = p[-1]
+
+    operandsStack.append(operand)
     typesStack.append('bool')
 
 # Handle hyper expressions
 def p_np_hyper_expression(p):
     'np_hyper_expression :'
     global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples
+
     if (operatorsStack):
         operator = operatorsStack[-1]
         if operator == '&&' or operator == '||':
@@ -482,6 +507,7 @@ def p_np_hyper_expression(p):
 def p_np_expression(p):
     'np_expression :'
     global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples
+
     if (operatorsStack):
         operator = operatorsStack[-1]
         if operator == '>' or operator == '>=' or operator == '<' or operator == '<=' or operator == '==' or operator == '<>':
@@ -504,6 +530,7 @@ def p_np_expression(p):
 def p_np_exp(p):
     'np_exp :'
     global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples
+
     if (operatorsStack):
         operator = operatorsStack[-1]
         if operator == '+' or operator == '-':
@@ -526,6 +553,7 @@ def p_np_exp(p):
 def p_np_term(p):
     'np_term :'
     global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples
+
     if (operatorsStack):
         operator = operatorsStack[-1]
         if operator == '*' or operator == '/' or operator == '%':
@@ -631,6 +659,74 @@ def p_np_while_end(p):
 
     cuadruples.append(Cuadruple('GOTO', None, None, start))
     cuadruples[end].res = len(cuadruples)
+
+# Handle for loop
+def p_np_for_start(p):
+    'np_for_start :'
+    global currentFunction, programName, operandsStack, typesStack
+
+    operand = p[-1]
+
+    if operand in vars_table[currentFunction]['vars']:
+        if vars_table[programName]['vars'][operand]['type'] == 'int':
+            operandsStack.append(operand)
+            typesStack.append('int')
+        else:
+            utils.showError(f'Variable \'{operand}\' must be an int!')
+    elif operand in vars_table[programName]['vars']:
+        if vars_table[programName]['vars'][operand]['type'] == 'int':
+            operandsStack.append(operand)
+            typesStack.append('int')
+        else:
+            utils.showError(f'Variable \'{operand}\' must be an int!')
+    else:
+        utils.showError(f'Variable \'{operand}\' has not been declared!')        
+    
+
+def p_np_for_range_start(p):
+    'np_for_range_start :'
+    global cuadruples, operandsStack, controlVar
+
+    start = p[-1]
+    controlVar = start
+    var = operandsStack[-1]
+
+    cuadruples.append(Cuadruple('=', start, None, var))
+    cuadruples.append(Cuadruple('=', var, None, 'VC'))
+
+def p_np_for_range_end(p):
+    'np_for_range_end :'
+    global cuadruples, operandsStack, jumpsStack, controlVar, finalVar, memory, idx
+
+    end = p[-1]
+    finalVar = end
+    aux = memory[idx]
+
+    cuadruples.append(Cuadruple('=', end, None, 'VF'))
+    cuadruples.append(Cuadruple('<', 'VC', 'VF', aux))
+    jumpsStack.append(len(cuadruples) - 1)
+    cuadruples.append(Cuadruple('GOTOF', aux, None, 0))
+    jumpsStack.append(len(cuadruples) - 1)
+
+    idx += 1
+    
+
+def p_np_for_end(p):
+    'np_for_end :'
+    global cuadruples, operandsStack, jumpsStack, memory, idx
+
+    aux = memory[idx]
+
+    cuadruples.append(Cuadruple('+', 'VC', 1, aux))
+    cuadruples.append(Cuadruple('=', aux, None, 'VC'))
+    cuadruples.append(Cuadruple('=', aux, None, operandsStack[-1]))
+
+    end = jumpsStack.pop()
+    ret = jumpsStack.pop()
+
+    cuadruples.append(Cuadruple('GOTO', None, None, ret))
+    cuadruples[end].res = len(cuadruples)
+    
 
 yacc.yacc()
 
