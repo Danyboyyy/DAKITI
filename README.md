@@ -10,3 +10,6 @@ Semántica básica de variables: directorio de procedimientos y tablas de variab
 
 ## Avance 3:
 Semántica básica de expresiones: cubo semántico, generación de código de expresiones ariméticas y estatutos secuenciales. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
+
+## Avance 4:
+Generación de código para estatutos condicionales: decisiones/ciclos. Cuádruplos para if(if, else if, else), while, y for controlado. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
