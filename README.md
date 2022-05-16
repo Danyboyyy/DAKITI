@@ -13,3 +13,6 @@ Semántica básica de expresiones: cubo semántico, generación de código de ex
 
 ## Avance 4:
 Generación de código para estatutos condicionales: decisiones/ciclos. Cuádruplos para if(if, else if, else), while, y for controlado. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
+
+## Avance 5:
+Generacion de código para funciones y sus llamadas. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
