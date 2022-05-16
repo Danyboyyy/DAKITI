@@ -21,15 +21,24 @@ operandsStack = deque() # Operands stack
 typesStack = deque() # Types stack
 jumpsStack = deque() # Jumps stack
 
-# Variables
+# Auxiliary Variables
 programName = ''
+
 currentFunction = ''
 currentFunctionType = ''
+
 currentVar = ''
 currentType = ''
 currentArrayTam = 0
 
-# For aux
+numParams = 0
+numVars = 0
+numTemps = 0
+hasReturn = False
+
+countParams = 0
+origin = ''
+
 controlVar = 0
 finalVar = 0
 
@@ -39,8 +48,9 @@ def p_program_1(p):
     '''
     program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN body_1 END np_program_end
     '''
-    # utils.displayVarsTable(vars_table)
+    utils.displayVarsTable(vars_table)
     utils.displayCuadruples(cuadruples)
+    utils.displayStack(operandsStack)
     print('Compiled succesfully!')
 
 def p_program_vars(p):
@@ -83,7 +93,7 @@ def p_functions_1(p):
 
 def p_functions_2(p):
     '''
-    functions_2 : FUNCTION function_type VAR_CTE_ID np_add_function LEFT_PAR arguments_1 RIGHT_PAR LEFT_KEY program_vars body_2 return RIGHT_KEY
+    functions_2 : FUNCTION function_type VAR_CTE_ID np_add_function LEFT_PAR arguments_1 RIGHT_PAR LEFT_KEY program_vars np_add_function_info body_2 return RIGHT_KEY np_end_function
     '''
 
 def p_arguments_1(p):
@@ -105,7 +115,7 @@ def p_arguments_3(p):
 
 def p_return(p):
     '''
-    return : RETURN LEFT_PAR hyper_expression_1 RIGHT_PAR SEMI_COLON
+    return : RETURN LEFT_PAR hyper_expression_1 np_return RIGHT_PAR SEMI_COLON
            | empty
     '''
 
@@ -145,7 +155,7 @@ def p_statements(p):
     statements : assignment_1
                | condition_1
                | writting_1
-               | function_call_2
+               | function_call_2 np_check_void_function
                | loops
     '''
 
@@ -159,7 +169,7 @@ def p_assignment_1(p):
 # FUNCTION CALLS
 def p_function_call_1(p):
     '''
-    function_call_1 : function_call_name LEFT_PAR function_call_arguments_1 RIGHT_PAR
+    function_call_1 : function_call_name LEFT_PAR function_call_arguments_1 np_count_parameters RIGHT_PAR np_function_call_end
     '''
 
 def p_function_call_2(p):
@@ -169,7 +179,7 @@ def p_function_call_2(p):
 
 def p_function_call_name(p):
     '''
-    function_call_name : VAR_CTE_ID
+    function_call_name : VAR_CTE_ID np_function_call_start
                        | built_in_functions
     '''
 
@@ -181,7 +191,7 @@ def p_function_call_arguments_1(p):
 
 def p_function_call_arguments_2(p):
     '''
-    function_call_arguments_2 : hyper_expression_1 function_call_arguments_3
+    function_call_arguments_2 : hyper_expression_1 np_check_parameter function_call_arguments_3
     '''
 
 def p_function_call_arguments_3(p):
@@ -290,7 +300,7 @@ def p_var_cte(p):
             | VAR_CTE_FLOAT np_add_float
             | TRUE np_add_bool
             | FALSE np_add_bool
-            | function_call_1
+            | function_call_1 np_check_non_void_function
     '''
 
 # CONDITIONALS
@@ -342,7 +352,9 @@ def p_np_program_start(p):
     programName = p[-1]
     currentFunction = programName
 
-    vars_table[programName] = {'type': 'void', 'vars': {}}
+    vars_table[programName] = {'type': 'void', 'vars': {}, 'params': {}, 'cuadruple': len(cuadruples), 'noVars': 0, 'noParams': 0, 'noTemps': 0}
+
+    cuadruples.append(Cuadruple('GOTO', None, None, 'main'))
 
 # Ending the program
 def p_np_program_end(p):
@@ -352,25 +364,153 @@ def p_np_program_end(p):
 # Adding a function to the functions directory
 def p_np_add_function(p):
     'np_add_function :'
-    global currentFunction, currentFunctionType
+    global currentFunction, currentFunctionType, numVars, numTemps, hasReturn
 
+    numVars = 0
+    numTemps = 0
+    hasReturn = False
     currentFunction = p[-1]
     if currentFunction not in vars_table:
-        vars_table[currentFunction] = {'type': currentFunctionType, 'vars': {}}
+        vars_table[currentFunction] = {'type': currentFunctionType, 'vars': {}, 'params': {}, 'cuadruple': len(cuadruples), 'noVars': 0, 'noParams': 0, 'noTemps': 0}
+
+        if currentFunctionType != 'void':
+            if currentFunction not in vars_table[programName]['vars']:
+                vars_table[programName]['vars'][currentFunction] = {'type': currentFunctionType}
+            else:
+                utils.showError(f'Name \'{currentFunction}\' has already been used for a variable!')
     else:
-        utils.showError(f'Function \'{currentFunction}\' has already beendeclared!')
+        utils.showError(f'Function \'{currentFunction}\' has already been declared!')
+
+# Ending a function
+def p_np_end_function(p):
+    'np_end_function :'
+    global cuadruples, vars_table, numTemps, currentFunction, currentFunctionType, hasReturn
+
+    if currentFunctionType == 'void' and hasReturn:
+        utils.showError(f'Functions of type \'void\' must not have a return statement!')
+    if currentFunctionType != 'void' and not hasReturn:
+        utils.showError(f'Functions of type other than \'void\' must have a return statement!')
+    
+    cuadruples.append(Cuadruple('ENDFUNC', None, None, None))
+    vars_table[currentFunction]['noTemps'] = numTemps
+    hasReturn = False
+
 
 # Adding a function's parameters to its symbol table
 def p_np_function_parameters(p):
     'np_function_parameters :'
-    global currentFunction, currentVar, currentType
+    global currentFunction, currentVar, currentType, numParams
 
     currentVar = p[-1]
 
     if currentVar not in vars_table[currentFunction]['vars']:
         vars_table[currentFunction]['vars'][currentVar] = {'type': currentType}
+
+        if len(vars_table[currentFunction]['params']) == 0:
+            numParams = 0
+        
+        vars_table[currentFunction]['params'][numParams] = currentType
+
+        numParams += 1
     else:
         utils.showError(f'Variable \'{currentVar}\' has already been declared!')
+
+# Adding relevant information to the function's directory
+def p_np_add_function_info(p):
+    'np_add_function_info :'
+    global vars_table, numParams, numVars
+
+    vars_table[currentFunction]['noParams'] = len(vars_table[currentFunction]['params'])
+    vars_table[currentFunction]['noVars'] = numVars
+
+# Returns in functions
+def p_np_return(p):
+    'np_return :'
+    global hasReturn, cuadruples, operandsStack, typesStack, currentFunctionType
+
+    hasReturn = True
+    returnValue = operandsStack.pop()
+    returnType = typesStack.pop()
+
+    if returnType == currentFunctionType:
+        cuadruples.append(Cuadruple('RETURN', None, None, returnValue))
+    else:
+        utils.showError(f'Return value \'{returnValue}\' of type \'{returnType}\' is not the same type as \'{currentFunctionType}\'!')
+    
+# Generate era cuadruple
+def p_np_function_call_start(p):
+    'np_function_call_start :'
+    global countParams, currentFunction, operandsStack, origin
+
+    calledFunction = p[-1]
+
+    if calledFunction in vars_table:
+        countParams = 0
+        origin = currentFunction
+        currentFunction = calledFunction
+        operandsStack.append('(')
+        cuadruples.append(Cuadruple('ERA', None, None, calledFunction))
+    else:
+        utils.showError(f'Function \'{currentFunction}\' has not been defined!')
+
+# Validate that the parameters type match
+def p_np_check_parameter(p):
+    'np_check_parameter :'
+    global countParams, currentFunction, typesStack, operandsStack, vars_table
+    
+    parameters = vars_table[currentFunction]['params']
+    if countParams in parameters:
+        argumentType = typesStack.pop()
+        argument = operandsStack.pop()
+        paramType = vars_table[currentFunction]['params'][countParams]
+
+        if paramType == argumentType:
+            cuadruples.append(Cuadruple('PARAM', argument, None, 'ARGUMENT#'+str(countParams + 1)))
+        else:
+            utils.showError(f'Argument #{countParams + 1} must be of type \'{paramType}\'')
+    else:
+        utils.showError(f'Function expected {len(parameters)} parameters and received {countParams + 1}')
+
+    countParams += 1
+
+# Verifiy that the number of parameters match
+def p_np_count_parameters(p):
+    'np_count_parameters :'
+    global vars_table, countParams
+    parameters = vars_table[currentFunction]['params']
+
+    if len(parameters) != countParams:
+        utils.showError(f'Function expected {len(parameters)} parameters and received {countParams}')
+
+# Generate gosub cuadruple
+def p_np_function_call_end(p):
+    'np_function_call_end :'
+    global cuadruples, currentFunction, operandsStack, vars_table
+    cuadruples.append(Cuadruple('GOSUB', None, None, currentFunction))
+    operandsStack.pop()
+
+    operandsStack.append(currentFunction)
+    typesStack.append(vars_table[currentFunction]['type'])
+    
+# Check usage of void functions
+def p_np_check_void_function(p):
+    'np_check_void_function :'
+    global vars_table, currentFunction, origin
+
+    if vars_table[currentFunction]['type'] != 'void':
+        utils.showError(f'A non void function must be assigned to a variable or used in an expression!')
+    
+    currentFunction = origin
+
+# Check usage of non void functions
+def p_np_check_non_void_function(p):
+    'np_check_non_void_function :'
+    global vars_table, currentFunction, origin
+
+    if vars_table[currentFunction]['type'] == 'void':
+        utils.showError(f'A void function cannot be assigned to a variable or used in an expression!')
+    
+    currentFunction = origin
 
 # Storing a function's type
 def p_np_current_function_type(p):
@@ -382,12 +522,13 @@ def p_np_current_function_type(p):
 # Adding a variable to the symbols table
 def p_np_add_variable(p):
     'np_add_variable :'
-    global currentType, currentVar
+    global currentType, currentVar, numVars
 
     currentVar = p[-1]
     
     if currentVar not in vars_table[currentFunction]['vars']:
         vars_table[currentFunction]['vars'][currentVar] = {'type': currentType}
+        numVars += 1
     else:
         utils.showError(f'Variable \'{currentVar}\' has already been declared!')
 
@@ -483,7 +624,7 @@ def p_np_add_bool(p):
 # Handle hyper expressions
 def p_np_hyper_expression(p):
     'np_hyper_expression :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples
+    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples, numTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -502,11 +643,12 @@ def p_np_hyper_expression(p):
                 operandsStack.append(memory[idx])
                 typesStack.append(resultType)
                 idx += 1
+                numTemps += 1
 
 # Handle expressions
 def p_np_expression(p):
     'np_expression :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples
+    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples, numTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -525,11 +667,12 @@ def p_np_expression(p):
                 operandsStack.append(memory[idx])
                 typesStack.append(resultType)
                 idx += 1
+                numTemps += 1
 
 # Handle exps
 def p_np_exp(p):
     'np_exp :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples
+    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples, numTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -548,11 +691,12 @@ def p_np_exp(p):
                 operandsStack.append(memory[idx])
                 typesStack.append(resultType)
                 idx += 1
+                numTemps += 1
 
 # Handle terms
 def p_np_term(p):
     'np_term :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples
+    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples, numTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -571,6 +715,7 @@ def p_np_term(p):
                 operandsStack.append(memory[idx])
                 typesStack.append(resultType)
                 idx += 1
+                numTemps += 1
 
 # Handle assignments
 def p_np_assignment(p):
@@ -685,7 +830,7 @@ def p_np_for_start(p):
 
 def p_np_for_range_start(p):
     'np_for_range_start :'
-    global cuadruples, operandsStack, controlVar
+    global cuadruples, operandsStack, controlVar, numTemps
 
     start = p[-1]
     controlVar = start
@@ -696,7 +841,7 @@ def p_np_for_range_start(p):
 
 def p_np_for_range_end(p):
     'np_for_range_end :'
-    global cuadruples, operandsStack, jumpsStack, controlVar, finalVar, memory, idx
+    global cuadruples, operandsStack, jumpsStack, controlVar, finalVar, memory, idx, numTemps
 
     end = p[-1]
     finalVar = end
@@ -709,6 +854,7 @@ def p_np_for_range_end(p):
     jumpsStack.append(len(cuadruples) - 1)
 
     idx += 1
+    numTemps += 1
     
 
 def p_np_for_end(p):
@@ -726,7 +872,6 @@ def p_np_for_end(p):
 
     cuadruples.append(Cuadruple('GOTO', None, None, ret))
     cuadruples[end].res = len(cuadruples)
-    
 
 yacc.yacc()
 
