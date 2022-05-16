@@ -46,11 +46,10 @@ finalVar = 0
 # PROGRAM
 def p_program_1(p):
     '''
-    program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN body_1 END np_program_end
+    program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN np_set_main body_1 END np_program_end
     '''
     utils.displayVarsTable(vars_table)
     utils.displayCuadruples(cuadruples)
-    utils.displayStack(operandsStack)
     print('Compiled succesfully!')
 
 def p_program_vars(p):
@@ -93,7 +92,7 @@ def p_functions_1(p):
 
 def p_functions_2(p):
     '''
-    functions_2 : FUNCTION function_type VAR_CTE_ID np_add_function LEFT_PAR arguments_1 RIGHT_PAR LEFT_KEY program_vars np_add_function_info body_2 return RIGHT_KEY np_end_function
+    functions_2 : FUNCTION function_type VAR_CTE_ID np_add_function LEFT_PAR arguments_1 RIGHT_PAR LEFT_KEY program_vars np_add_function_info body_2 RIGHT_KEY np_end_function
     '''
 
 def p_arguments_1(p):
@@ -115,8 +114,13 @@ def p_arguments_3(p):
 
 def p_return(p):
     '''
-    return : RETURN LEFT_PAR hyper_expression_1 np_return RIGHT_PAR SEMI_COLON
-           | empty
+    return : RETURN LEFT_PAR return_value RIGHT_PAR SEMI_COLON
+    '''
+
+def p_return_value(p):
+    '''
+    return_value : hyper_expression_1 np_return
+                 | empty np_return_empty
     '''
 
 # TYPES
@@ -157,6 +161,7 @@ def p_statements(p):
                | writting_1
                | function_call_2 np_check_void_function
                | loops
+               | return
     '''
 
 # ASSIGNMENT
@@ -359,7 +364,15 @@ def p_np_program_start(p):
 # Ending the program
 def p_np_program_end(p):
     'np_program_end :'
-    pass
+    global cuadruples
+
+    cuadruples.append(Cuadruple('END', None, None, None))
+
+def p_np_ser_main(p):
+    'np_set_main :'
+    global cuadruples
+
+    cuadruples[0].res = len(cuadruples)
 
 # Adding a function to the functions directory
 def p_np_add_function(p):
@@ -436,6 +449,15 @@ def p_np_return(p):
         cuadruples.append(Cuadruple('RETURN', None, None, returnValue))
     else:
         utils.showError(f'Return value \'{returnValue}\' of type \'{returnType}\' is not the same type as \'{currentFunctionType}\'!')
+
+def p_np_return_empty(p):
+    'np_return_empty :'
+    
+    if currentFunctionType == 'void':
+        cuadruples.append(Cuadruple('RETURN', None, None, None))
+    else:
+        utils.showError(f'Non void functions must have a return value!')
+
     
 # Generate era cuadruple
 def p_np_function_call_start(p):
@@ -489,8 +511,9 @@ def p_np_function_call_end(p):
     cuadruples.append(Cuadruple('GOSUB', None, None, currentFunction))
     operandsStack.pop()
 
-    operandsStack.append(currentFunction)
-    typesStack.append(vars_table[currentFunction]['type'])
+    if vars_table[currentFunction]['type'] != 'void':
+        operandsStack.append(currentFunction)
+        typesStack.append(vars_table[currentFunction]['type'])
     
 # Check usage of void functions
 def p_np_check_void_function(p):
@@ -737,7 +760,7 @@ def p_np_assignment(p):
 def p_np_writting(p):
     'np_writting :'
     global operandsStack, cuadruples
-    operand = operandsStack[-1]
+    operand = operandsStack.pop()
     cuadruples.append(Cuadruple('print', None, None, operand))
    
 # Handle writting string
@@ -752,8 +775,8 @@ def p_np_if_start(p):
     'np_if_start :'
     global cuadruples, typesStack, operandsStack, jumpsStack
 
-    type = typesStack[-1]
-    result = operandsStack[-1]
+    type = typesStack.pop()
+    result = operandsStack.pop()
 
     if (type != 'bool'):
         utils.showError('Expression must return a bool!')
@@ -788,8 +811,8 @@ def p_np_while_mid(p):
     'np_while_mid :'
     global cuadruples, typesStack, operandsStack, jumpsStack
 
-    type = typesStack[-1]
-    result = operandsStack[-1]
+    type = typesStack.pop()
+    result = operandsStack.pop()
 
     if (type != 'bool'):
         utils.showError('Expression must return a bool!')
