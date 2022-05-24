@@ -4,11 +4,17 @@ from os import path
 import ply.yacc as yacc
 from lexer import tokens
 from collections import deque
-from SemanticCube import semantic_cube
-from Cuadruple import *
+from SemanticCube import SemanticCube
+from Cuadruple import Cuadruple
+from Memory import Memory
 import utils
 
+vmemory = Memory() # Virtual Memory
+
+semantic_cube = SemanticCube().semantic_cube # Semantic Cube
+
 vars_table = {} # Variables Table
+constants_table = {'int': {}, 'float': {}, 'bool': {}, 'string': {}} # Constants Table
 cuadruples = [] # Cuadrulpes List
 
 # Memory Simulation
@@ -29,7 +35,7 @@ currentFunctionType = ''
 
 currentVar = ''
 currentType = ''
-currentArrayTam = 0
+currentArraySize = 0
 
 numParams = 0
 numVars = 0
@@ -49,7 +55,11 @@ def p_program_1(p):
     program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN np_set_main body_1 END np_program_end
     '''
     utils.displayVarsTable(vars_table)
+    utils.displayConstantsTable(constants_table)
     utils.displayCuadruples(cuadruples)
+    # utils.displayStack(operandsStack)
+    # utils.displayStack(typesStack)
+    # utils.displayStack(operatorsStack)
     print('Compiled succesfully!')
 
 def p_program_vars(p):
@@ -383,14 +393,20 @@ def p_np_add_function(p):
     numTemps = 0
     hasReturn = False
     currentFunction = p[-1]
+
     if currentFunction not in vars_table:
         vars_table[currentFunction] = {'type': currentFunctionType, 'vars': {}, 'params': {}, 'cuadruple': len(cuadruples), 'noVars': 0, 'noParams': 0, 'noTemps': 0}
 
         if currentFunctionType != 'void':
             if currentFunction not in vars_table[programName]['vars']:
-                vars_table[programName]['vars'][currentFunction] = {'type': currentFunctionType}
+                memoryPos = vmemory.allocMemory('global', currentFunctionType, 1)
+
+                vars_table[programName]['vars'][currentFunction] = {'type': currentFunctionType, 'memory': memoryPos}
             else:
                 utils.showError(f'Name \'{currentFunction}\' has already been used for a variable!')
+        
+        vmemory.freeLocalMemory()
+        vmemory.freeTempMemory()
     else:
         utils.showError(f'Function \'{currentFunction}\' has already been declared!')
 
@@ -408,7 +424,6 @@ def p_np_end_function(p):
     vars_table[currentFunction]['noTemps'] = numTemps
     hasReturn = False
 
-
 # Adding a function's parameters to its symbol table
 def p_np_function_parameters(p):
     'np_function_parameters :'
@@ -417,7 +432,13 @@ def p_np_function_parameters(p):
     currentVar = p[-1]
 
     if currentVar not in vars_table[currentFunction]['vars']:
-        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType}
+        memoryPos = 0
+        if currentFunction == programName:
+            memoryPos = vmemory.allocMemory('global', currentType, 1)
+        else:
+            memoryPos = vmemory.allocMemory('local', currentType, 1)
+
+        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'memory': memoryPos}
 
         if len(vars_table[currentFunction]['params']) == 0:
             numParams = 0
@@ -457,7 +478,6 @@ def p_np_return_empty(p):
         cuadruples.append(Cuadruple('RETURN', None, None, None))
     else:
         utils.showError(f'Non void functions must have a return value!')
-
     
 # Generate era cuadruple
 def p_np_function_call_start(p):
@@ -508,11 +528,18 @@ def p_np_count_parameters(p):
 def p_np_function_call_end(p):
     'np_function_call_end :'
     global cuadruples, currentFunction, operandsStack, vars_table
+
     cuadruples.append(Cuadruple('GOSUB', None, None, currentFunction))
     operandsStack.pop()
 
     if vars_table[currentFunction]['type'] != 'void':
-        operandsStack.append(currentFunction)
+        memoryPos = vars_table[programName]['vars'][currentFunction]['memory']
+
+        memoryTemp = vmemory.allocMemory('temp', vars_table[currentFunction]['type'], 1)
+
+        cuadruples.append(Cuadruple('=', memoryPos, None, memoryTemp))
+        
+        operandsStack.append(memoryTemp)
         typesStack.append(vars_table[currentFunction]['type'])
     
 # Check usage of void functions
@@ -550,7 +577,14 @@ def p_np_add_variable(p):
     currentVar = p[-1]
     
     if currentVar not in vars_table[currentFunction]['vars']:
-        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType}
+        memoryPos = 0
+
+        if currentFunction == programName:
+            memoryPos = vmemory.allocMemory('global', currentType, 1)
+        else:
+            memoryPos = vmemory.allocMemory('local', currentType, 1)
+            
+        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'memory': memoryPos}
         numVars += 1
     else:
         utils.showError(f'Variable \'{currentVar}\' has already been declared!')
@@ -558,13 +592,19 @@ def p_np_add_variable(p):
 # Adding an array to the symbols table
 def p_np_add_array(p):
     'np_add_array :'
-    global currentType, currentVar, currentArrayTam
+    global currentType, currentVar, currentArraySize
 
     currentVar = p[-4]
-    currentArrayTam = p[-2]
+    currentArraySize = p[-2]
+
+    memoryPos = 0
+    if currentFunction == programName:
+        memoryPos = vmemory.allocMemory('global', currentType, currentArraySize)
+    else:
+        memoryPos = vmemory.allocMemory('local', currentType, currentArraySize)
 
     if currentVar not in vars_table[currentFunction]['vars']:
-        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'size': currentArrayTam}
+        vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'size': currentArraySize, 'memory': memoryPos}
     else:
         utils.showError(f'Variable \'{currentVar}\' has already been declared!')
 
@@ -606,10 +646,10 @@ def p_np_add_id(p):
     operand = p[-1]
 
     if operand in vars_table[currentFunction]['vars']:
-        operandsStack.append(operand)
+        operandsStack.append(vars_table[currentFunction]['vars'][operand]['memory'])
         typesStack.append(vars_table[currentFunction]['vars'][operand]['type'])
     elif operand in vars_table[programName]['vars']:
-        operandsStack.append(operand)
+        operandsStack.append(vars_table[programName]['vars'][operand]['memory'])
         typesStack.append(vars_table[programName]['vars'][operand]['type'])
     else:
         utils.showError(f'Variable \'{operand}\' has not been declared!')
@@ -621,7 +661,11 @@ def p_np_add_int(p):
 
     operand = p[-1]
 
-    operandsStack.append(operand)
+    if operand not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][operand] = {'type': 'int', 'memory': memoryPos}
+
+    operandsStack.append(constants_table['int'][operand]['memory'])
     typesStack.append('int')
 
 # Add flaot to the operands stack and type to the types stack
@@ -631,7 +675,11 @@ def p_np_add_float(p):
 
     operand = p[-1]
 
-    operandsStack.append(operand)
+    if operand not in constants_table['float']:
+        memoryPos = vmemory.allocMemory('constant', 'float', 1)
+        constants_table['float'][operand] = {'type': 'float', 'memory': memoryPos}
+
+    operandsStack.append(constants_table['float'][operand]['memory'])
     typesStack.append('float')
 
 # Add bool to the operands stack and type to the types stack
@@ -641,13 +689,17 @@ def p_np_add_bool(p):
 
     operand = p[-1]
 
-    operandsStack.append(operand)
+    if operand not in constants_table['bool']:
+        memoryPos = vmemory.allocMemory('constant', 'bool', 1)
+        constants_table['bool'][operand] = {'type': 'bool', 'memory': memoryPos}
+
+    operandsStack.append(constants_table['bool'][operand]['memory'])
     typesStack.append('bool')
 
 # Handle hyper expressions
 def p_np_hyper_expression(p):
     'np_hyper_expression :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples, numTemps
+    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -659,19 +711,20 @@ def p_np_hyper_expression(p):
             operator = operatorsStack.pop()
             resultType = semantic_cube[leftType][rightType][operator]
 
+            memoryPos = vmemory.allocMemory('temp', resultType, 1)
+
             if resultType == 'error':
                 utils.showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
             else:
-                cuadruples.append(Cuadruple(operator, left, right, memory[idx]))
-                operandsStack.append(memory[idx])
+                cuadruples.append(Cuadruple(operator, left, right, memoryPos))
+                operandsStack.append(memoryPos)
                 typesStack.append(resultType)
-                idx += 1
                 numTemps += 1
 
 # Handle expressions
 def p_np_expression(p):
     'np_expression :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples, numTemps
+    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -683,19 +736,20 @@ def p_np_expression(p):
             operator = operatorsStack.pop()
             resultType = semantic_cube[leftType][rightType][operator]
 
+            memoryPos = vmemory.allocMemory('temp', resultType, 1)
+
             if resultType == 'error':
                 utils.showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
             else:
-                cuadruples.append(Cuadruple(operator, left, right, memory[idx]))
-                operandsStack.append(memory[idx])
+                cuadruples.append(Cuadruple(operator, left, right, memoryPos))
+                operandsStack.append(memoryPos)
                 typesStack.append(resultType)
-                idx += 1
                 numTemps += 1
 
 # Handle exps
 def p_np_exp(p):
     'np_exp :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples, numTemps
+    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -707,19 +761,20 @@ def p_np_exp(p):
             operator = operatorsStack.pop()
             resultType = semantic_cube[leftType][rightType][operator]
 
+            memoryPos = vmemory.allocMemory('temp', resultType, 1)
+
             if resultType == 'error':
                 utils.showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
             else:
-                cuadruples.append(Cuadruple(operator, left, right, memory[idx]))
-                operandsStack.append(memory[idx])
+                cuadruples.append(Cuadruple(operator, left, right, memoryPos))
+                operandsStack.append(memoryPos)
                 typesStack.append(resultType)
-                idx += 1
                 numTemps += 1
 
 # Handle terms
 def p_np_term(p):
     'np_term :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, memory, idx, cuadruples, numTemps
+    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -731,13 +786,14 @@ def p_np_term(p):
             operator = operatorsStack.pop()
             resultType = semantic_cube[leftType][rightType][operator]
 
+            memoryPos = vmemory.allocMemory('temp', resultType, 1)
+
             if resultType == 'error':
                 utils.showError(f'Cannot perform \'{operator}\' with \'{leftType}\' and \'{rightType}\' as operands!')
             else:
-                cuadruples.append(Cuadruple(operator, left, right, memory[idx]))
-                operandsStack.append(memory[idx])
+                cuadruples.append(Cuadruple(operator, left, right, memoryPos))
+                operandsStack.append(memoryPos)
                 typesStack.append(resultType)
-                idx += 1
                 numTemps += 1
 
 # Handle assignments
@@ -767,8 +823,16 @@ def p_np_writting(p):
 def p_np_writting_strings(p):
     'np_writting_strings :'
     global cuadruples
+
     string = p[-1]
-    cuadruples.append(Cuadruple('print', None, None, string))
+
+    if string not in constants_table['string']:
+        memoryPos = vmemory.allocMemory('constant', 'string', 1)
+        constants_table['string'][string] = {'type': 'string', 'memory': memoryPos}
+    else:
+        memoryPos = constants_table['string'][string]['memory']
+
+    cuadruples.append(Cuadruple('print', None, None, memoryPos))
 
 # Handle conditionals
 def p_np_if_start(p):
@@ -837,20 +901,19 @@ def p_np_for_start(p):
 
     if operand in vars_table[currentFunction]['vars']:
         if vars_table[programName]['vars'][operand]['type'] == 'int':
-            operandsStack.append(operand)
+            operandsStack.append(vars_table[currentFunction]['vars'][operand]['memory'])
             typesStack.append('int')
         else:
             utils.showError(f'Variable \'{operand}\' must be an int!')
     elif operand in vars_table[programName]['vars']:
         if vars_table[programName]['vars'][operand]['type'] == 'int':
-            operandsStack.append(operand)
+            operandsStack.append(vars_table[programName]['vars'][operand]['memory'])
             typesStack.append('int')
         else:
             utils.showError(f'Variable \'{operand}\' must be an int!')
     else:
         utils.showError(f'Variable \'{operand}\' has not been declared!')        
     
-
 def p_np_for_range_start(p):
     'np_for_range_start :'
     global cuadruples, operandsStack, controlVar, numTemps
@@ -859,36 +922,49 @@ def p_np_for_range_start(p):
     controlVar = start
     var = operandsStack[-1]
 
-    cuadruples.append(Cuadruple('=', start, None, var))
+    memoryPos = 0
+    if start not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][start] = {'type': 'int', 'memory': memoryPos}
+    else:
+        memoryPos = constants_table['int'][start]['memory']
+
+    cuadruples.append(Cuadruple('=', memoryPos, None, var))
     cuadruples.append(Cuadruple('=', var, None, 'VC'))
 
 def p_np_for_range_end(p):
     'np_for_range_end :'
-    global cuadruples, operandsStack, jumpsStack, controlVar, finalVar, memory, idx, numTemps
+    global cuadruples, operandsStack, jumpsStack, controlVar, finalVar, numTemps
 
     end = p[-1]
     finalVar = end
-    aux = memory[idx]
 
-    cuadruples.append(Cuadruple('=', end, None, 'VF'))
-    cuadruples.append(Cuadruple('<', 'VC', 'VF', aux))
+    memoryPos = 0
+    if end not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][end] = {'type': 'int', 'memory': memoryPos}
+    else:
+        memoryPos = constants_table['int'][end]['memory']
+    
+    memoryPos1 = vmemory.allocMemory('temp', 'bool', 1)
+
+    cuadruples.append(Cuadruple('=', memoryPos, None, 'VF'))
+    cuadruples.append(Cuadruple('<', 'VC', 'VF', memoryPos1))
     jumpsStack.append(len(cuadruples) - 1)
-    cuadruples.append(Cuadruple('GOTOF', aux, None, 0))
+    cuadruples.append(Cuadruple('GOTOF', memoryPos1, None, 0))
     jumpsStack.append(len(cuadruples) - 1)
 
-    idx += 1
     numTemps += 1
     
-
 def p_np_for_end(p):
     'np_for_end :'
-    global cuadruples, operandsStack, jumpsStack, memory, idx
+    global cuadruples, operandsStack, jumpsStack
 
-    aux = memory[idx]
+    memoryPos = vmemory.allocMemory('temp', 'int', 1)
 
-    cuadruples.append(Cuadruple('+', 'VC', 1, aux))
-    cuadruples.append(Cuadruple('=', aux, None, 'VC'))
-    cuadruples.append(Cuadruple('=', aux, None, operandsStack[-1]))
+    cuadruples.append(Cuadruple('+', 'VC', 1, memoryPos))
+    cuadruples.append(Cuadruple('=', memoryPos, None, 'VC'))
+    cuadruples.append(Cuadruple('=', memoryPos, None, operandsStack[-1]))
 
     end = jumpsStack.pop()
     ret = jumpsStack.pop()
