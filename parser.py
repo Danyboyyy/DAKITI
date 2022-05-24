@@ -1,6 +1,4 @@
 import sys
-import re
-from os import path
 import ply.yacc as yacc
 from lexer import tokens
 from collections import deque
@@ -50,11 +48,11 @@ def p_program_1(p):
     '''
     program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN np_set_main body_1 END np_program_end
     '''
-    utils.displayVarsTable(vars_table)
-    utils.displayConstantsTable(constants_table)
-    utils.displayCuadruples(cuadruples)
-    utils.displayStack(operandsStack)
-    utils.displayStack(typesStack)
+    # utils.displayVarsTable(vars_table)
+    # utils.displayConstantsTable(constants_table)
+    # utils.displayCuadruples(cuadruples)
+    # utils.displayStack(operandsStack)
+    # utils.displayStack(typesStack)
     # utils.displayStack(operatorsStack)
     print('Compiled succesfully!')
 
@@ -970,26 +968,9 @@ def p_np_for_end(p):
 
     numTemps += 1
 
-yacc.yacc()
+parser = yacc.yacc()
 
-##### PROGRAM EXECUTION #####
-if __name__ == '__main__':
-    try:
-        if not len(sys.argv) == 2:
-            sys.exit("Try running the following command: python parser.py name_of_file.dak")
-
-        file = sys.argv[1]
-
-        if not re.match("(.*?)\.(dak)$", file):
-            sys.exit("File should be a .dak file!")
-
-        if not path.isfile(file):
-            sys.exit("Cannot find the file!" + file)
-
-        ifFile = open(file, 'r')
-        data = ifFile.read()
-        ifFile.close()
-
-        yacc.parse(data)
-    except EOFError:
-        print("Error, try again!")
+def run(data):
+    parser.parse(data)
+    
+    return([cuadruples, vars_table, constants_table, programName])
