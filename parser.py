@@ -955,7 +955,7 @@ def p_np_for_range_end(p):
     
 def p_np_for_end(p):
     'np_for_end :'
-    global cuadruples, operandsStack, jumpsStack
+    global cuadruples, operandsStack, jumpsStack, numTemps
 
     memoryPos = vmemory.allocMemory('temp', 'int', 1)
 
@@ -967,6 +967,8 @@ def p_np_for_end(p):
 
     cuadruples.append(Cuadruple('GOTO', None, None, ret))
     cuadruples[end].res = len(cuadruples)
+
+    numTemps += 1
 
 yacc.yacc()
 
