@@ -17,10 +17,6 @@ vars_table = {} # Variables Table
 constants_table = {'int': {}, 'float': {}, 'bool': {}, 'string': {}} # Constants Table
 cuadruples = [] # Cuadrulpes List
 
-# Memory Simulation
-memory = ['t' + str(x) for x in range(1, 100)]
-idx = 0
-
 # Stacks for building cuadruples
 operatorsStack = deque() # Operators stack
 operandsStack = deque() # Operands stack
@@ -57,8 +53,8 @@ def p_program_1(p):
     utils.displayVarsTable(vars_table)
     utils.displayConstantsTable(constants_table)
     utils.displayCuadruples(cuadruples)
-    # utils.displayStack(operandsStack)
-    # utils.displayStack(typesStack)
+    utils.displayStack(operandsStack)
+    utils.displayStack(typesStack)
     # utils.displayStack(operatorsStack)
     print('Compiled succesfully!')
 
@@ -916,11 +912,12 @@ def p_np_for_start(p):
     
 def p_np_for_range_start(p):
     'np_for_range_start :'
-    global cuadruples, operandsStack, controlVar, numTemps
+    global cuadruples, operandsStack, typesStack, controlVar, numTemps
 
     start = p[-1]
     controlVar = start
-    var = operandsStack[-1]
+    var = operandsStack.pop()
+    typesStack.pop()
 
     memoryPos = 0
     if start not in constants_table['int']:
@@ -964,7 +961,6 @@ def p_np_for_end(p):
 
     cuadruples.append(Cuadruple('+', 'VC', 1, memoryPos))
     cuadruples.append(Cuadruple('=', memoryPos, None, 'VC'))
-    cuadruples.append(Cuadruple('=', memoryPos, None, operandsStack[-1]))
 
     end = jumpsStack.pop()
     ret = jumpsStack.pop()
