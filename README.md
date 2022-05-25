@@ -18,4 +18,4 @@ Generación de código para estatutos condicionales: decisiones/ciclos. Cuádrup
 Generacion de código para funciones y sus llamadas. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
 
 ## Avance 6:
-Mapa de memoria de ejecución para la máquina virtual. Ejecución de expresiones ariméticas y estatutos secuenciales. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
+Mapa de memoria de ejecución para la máquina virtual. Ejecución de expresiones ariméticas y estatutos secuenciales. Para correr el parser ejecutar el comando "python vm.py <nombre_del_archivo.dak>"
