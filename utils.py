@@ -21,6 +21,10 @@ def displayConstantsTable(constants_table):
         for var in constants_table[type]:
             print(var, constants_table[type][var]['memory'])
 
+def displayMemory(memory):
+    for address in memory:
+        print(address, memory[address])
+
 def displayCuadruples(cuadruples):
     idx = 0
     for c in cuadruples:
