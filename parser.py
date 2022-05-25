@@ -54,7 +54,6 @@ def p_program_1(p):
     # utils.displayStack(operandsStack)
     # utils.displayStack(typesStack)
     # utils.displayStack(operatorsStack)
-    print('Compiled succesfully!')
 
 def p_program_vars(p):
     '''
@@ -572,7 +571,6 @@ def p_np_add_variable(p):
     
     if currentVar not in vars_table[currentFunction]['vars']:
         memoryPos = 0
-
         if currentFunction == programName:
             memoryPos = vmemory.allocMemory('global', currentType, 1)
         else:
@@ -811,7 +809,7 @@ def p_np_writting(p):
     'np_writting :'
     global operandsStack, cuadruples
     operand = operandsStack.pop()
-    cuadruples.append(Cuadruple('print', None, None, operand))
+    cuadruples.append(Cuadruple('PRINT', None, None, operand))
    
 # Handle writting string
 def p_np_writting_strings(p):
@@ -826,7 +824,7 @@ def p_np_writting_strings(p):
     else:
         memoryPos = constants_table['string'][string]['memory']
 
-    cuadruples.append(Cuadruple('print', None, None, memoryPos))
+    cuadruples.append(Cuadruple('PRINT', None, None, memoryPos))
 
 # Handle conditionals
 def p_np_if_start(p):
