@@ -51,6 +51,12 @@ for type in constants_table:
     for constant in constants_table[type]:
         constants_memory[constants_table[type][constant]['memory']] = constant
 
+print('Global')
+utils.displayMemory(globalVars_memory)
+print('Constants')
+utils.displayMemory(constants_memory)
+utils.displayCuadruples(cuadruples)
+
 def addTempToMemory(address, res):
     global tempVars_memory
 
@@ -67,10 +73,16 @@ def addTempToMemory(address, res):
 
 # Access value based on the memory address
 def getValue(address):
+    addressToString = str(address)
+    
+    if addressToString[0] == '(' and addressToString[-1] == ')':
+        address = getValue(int(addressToString[1:-1]))
+    
     if 1000 <= address < 5000: # Local variables
         pass # Not handling local memory yet
     elif 5000 <= address < 9000: # Global Variables
         if globalVars_memory[address] == None:
+            print(address)
             utils.showError('Variable does not have a value!')
 
         return globalVars_memory[address]
@@ -79,12 +91,14 @@ def getValue(address):
             utils.showError('Variable does not have a value!')
 
         return constants_memory[address]
-    elif 13000 <= address < 17000: # Temp variables
+    elif 13000 <= address < 18000: # Temp variables
         if tempVars_memory[address] == None:
             utils.showError('Variable does not have a value!')
 
         return tempVars_memory[address]
     else:
+        print(address)
+        print(current)
         utils.showError('Memory error!')
 
 # Change booleans to lowercase
@@ -113,6 +127,8 @@ while current < len(cuadruples):
 
     if operator == '+':
         if 13000 <= res < 17000:
+            tempVars_memory[res] = getValue(op1) + getValue(op2)
+        elif 17000 <= res < 18000:
             tempVars_memory[res] = getValue(op1) + getValue(op2)
         else:
             globalVars_memory[res] = getValue(op1) + getValue(op2)
@@ -192,6 +208,11 @@ while current < len(cuadruples):
         else:
             globalVars_memory[res] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
     elif operator == '=':
+        resToString = str(res)
+    
+        if resToString[0] == '(' and resToString[-1] == ')':
+            res = getValue(int(resToString[1:-1]))
+
         if 13000 <= res < 17000:
             tempVars_memory[res] = getValue(op1)
         else:
@@ -205,5 +226,9 @@ while current < len(cuadruples):
         if getValue(op1) == 'false':
             current = res
             continue
+    elif operator == 'VERIFY':
+        if getValue(op1) < getValue(op2) or getValue(op1) >= getValue(res):
+            utils.showError('Index out of bounds!')
+
     
     current += 1

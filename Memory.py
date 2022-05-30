@@ -21,6 +21,7 @@ class Memory:
         self.tempFloat = 14000
         self.tempBool = 15000
         self.tempString = 16000
+        self.tempPointer = 17000
 
     def freeLocalMemory(self):
         self.localInt = 1000
@@ -139,6 +140,12 @@ class Memory:
                 if self.tempString < 17000:
                     self.tempString = self.tempString + size
                     return self.tempString - size
+                else:
+                    utils.showError('Ran out of memory for temp string variables!')
+            elif type == 'pointer':
+                if self.tempPointer < 18000:
+                    self.tempPointer = self.tempPointer + size
+                    return self.tempPointer - size
                 else:
                     utils.showError('Ran out of memory for temp string variables!')
             else:

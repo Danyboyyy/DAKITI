@@ -1,4 +1,5 @@
 import sys
+from traceback import print_stack
 import ply.yacc as yacc
 from lexer import tokens
 from collections import deque
@@ -48,12 +49,6 @@ def p_program_1(p):
     '''
     program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN np_set_main body_1 END np_program_end
     '''
-    # utils.displayVarsTable(vars_table)
-    # utils.displayConstantsTable(constants_table)
-    # utils.displayCuadruples(cuadruples)
-    # utils.displayStack(operandsStack)
-    # utils.displayStack(typesStack)
-    # utils.displayStack(operatorsStack)
 
 def p_program_vars(p):
     '''
@@ -83,8 +78,8 @@ def p_vars_3(p):
     '''
     vars_3 : VAR_CTE_ID np_add_variable COMMA vars_3
            | VAR_CTE_ID np_add_variable SEMI_COLON vars_2
-           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK np_add_array COMMA vars_3
-           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK np_add_array SEMI_COLON vars_2
+           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT np_add_cte_int RIGHT_BRACK np_add_array COMMA vars_3
+           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT np_add_cte_int RIGHT_BRACK np_add_array SEMI_COLON vars_2
     '''
 
 # FUNCTIONS
@@ -171,7 +166,7 @@ def p_statements(p):
 def p_assignment_1(p):
     '''
     assignment_1 : VAR_CTE_ID np_add_id EQUAL np_add_operator hyper_expression_1 np_assignment SEMI_COLON
-                 | VAR_CTE_ID LEFT_BRACK hyper_expression_1 RIGHT_BRACK EQUAL np_add_operator hyper_expression_1 SEMI_COLON
+                 | VAR_CTE_ID LEFT_BRACK np_add_bottom hyper_expression_1 RIGHT_BRACK np_add_id_array np_remove_bottom EQUAL np_add_operator hyper_expression_1 np_assignment SEMI_COLON
     '''
 
 # FUNCTION CALLS
@@ -303,7 +298,7 @@ def p_factor_1(p):
 def p_var_cte(p):
     '''
     var_cte : VAR_CTE_ID np_add_id
-            | VAR_CTE_ID LEFT_BRACK hyper_expression_1 RIGHT_BRACK
+            | VAR_CTE_ID LEFT_BRACK np_add_bottom hyper_expression_1 RIGHT_BRACK np_add_id_array np_remove_bottom
             | VAR_CTE_INT np_add_int
             | VAR_CTE_FLOAT np_add_float
             | TRUE np_add_bool
@@ -338,7 +333,7 @@ def p_while_loop(p):
 
 def p_for_loop(p):
     '''
-    for_loop : FOR LEFT_PAR VAR_CTE_ID np_for_start IN RANGE LEFT_PAR VAR_CTE_INT np_for_range_start COMMA VAR_CTE_INT np_for_range_end RIGHT_PAR RIGHT_PAR body_1 np_for_end
+    for_loop : FOR LEFT_PAR VAR_CTE_ID np_for_start IN RANGE LEFT_PAR VAR_CTE_INT np_add_cte_int np_for_range_start COMMA VAR_CTE_INT np_add_cte_int np_for_range_end RIGHT_PAR RIGHT_PAR body_1 np_for_end
     '''
 
 # Error handling
@@ -486,7 +481,7 @@ def p_np_function_call_start(p):
         operandsStack.append('(')
         cuadruples.append(Cuadruple('ERA', None, None, calledFunction))
     else:
-        utils.showError(f'Function \'{currentFunction}\' has not been defined!')
+        utils.showError(f'Function \'{calledFunction}\' has not been defined!')
 
 # Validate that the parameters type match
 def p_np_check_parameter(p):
@@ -586,9 +581,8 @@ def p_np_add_array(p):
     'np_add_array :'
     global currentType, currentVar, currentArraySize
 
-    currentVar = p[-4]
-    currentArraySize = p[-2]
-
+    currentVar = p[-5]
+    currentArraySize = p[-3]
     memoryPos = 0
     if currentFunction == programName:
         memoryPos = vmemory.allocMemory('global', currentType, currentArraySize)
@@ -599,6 +593,17 @@ def p_np_add_array(p):
         vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'size': currentArraySize, 'memory': memoryPos}
     else:
         utils.showError(f'Variable \'{currentVar}\' has already been declared!')
+
+    memoryAddress = memoryPos
+    if memoryAddress not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][memoryAddress] = {'type': 'int', 'memory': memoryPos}
+    if 0 not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][0] = {'type': 'int', 'memory': memoryPos}
+    if currentArraySize not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][currentArraySize] = {'type': 'int', 'memory': memoryPos}
 
 # Storing a variable's type
 def p_np_current_type(p):
@@ -620,8 +625,7 @@ def p_np_add_bottom(p):
     'np_add_bottom :'
     global operatorsStack
 
-    operator = p[-1]
-    operatorsStack.append(operator)
+    operatorsStack.append('(')
 
 # Removing fake bottom
 def p_np_remove_bottom(p):
@@ -633,7 +637,7 @@ def p_np_remove_bottom(p):
 # Add id to the operands stack and type to the types stack
 def p_np_add_id(p):
     'np_add_id :'
-    global currentFunction, programName
+    global currentFunction, programName, operandsStack, typesStack
     
     operand = p[-1]
 
@@ -645,6 +649,44 @@ def p_np_add_id(p):
         typesStack.append(vars_table[programName]['vars'][operand]['type'])
     else:
         utils.showError(f'Variable \'{operand}\' has not been declared!')
+
+# Add id of array to operands stack and type to the types stack and generate related cuadruples
+def p_np_add_id_array(p):
+    'np_add_id_array :'
+    global operandsStack, typesStack, cuadruples, vars_table, currentFunction, programName
+    
+    arr = p[-5]
+    idx = operandsStack.pop()
+    typesStack.pop()
+    
+    if arr in vars_table[currentFunction]['vars']:
+        if 'size' in vars_table[currentFunction]['vars'][arr]:
+            cuadruples.append(Cuadruple('VERIFY', idx, constants_table['int'][0]['memory'], constants_table['int'][vars_table[currentFunction]['vars'][arr]['size']]['memory']))
+        else:
+            utils.showError(f'Variable \'{arr}\' has not been declared as an array!')
+    elif arr in vars_table[programName]['vars']:
+        if 'size' in vars_table[programName]['vars'][arr]:
+            cuadruples.append(Cuadruple('VERIFY', idx, constants_table['int'][0]['memory'], constants_table['int'][vars_table[programName]['vars'][arr]['size']]['memory']))
+        else:
+            utils.showError(f'Variable \'{arr}\' has not been declared as an array!')
+    else:
+        utils.showError(f'Variable \'{arr}\' has not been declared!')
+    
+    memoryPos = vmemory.allocMemory('temp', 'pointer', 1)
+    cuadruples.append(Cuadruple('+', idx, constants_table['int'][vars_table[currentFunction]['vars'][arr]['memory']]['memory'], memoryPos))
+
+    operandsStack.append('(' + str(memoryPos) + ')')
+    typesStack.append(vars_table[currentFunction]['vars'][arr]['type'])
+
+def p_np_add_cte_int(p):
+    'np_add_cte_int :'
+    global operandsStack, typesStack
+
+    operand = p[-1]
+
+    if operand not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][operand] = {'type': 'int', 'memory': memoryPos}
 
 # Add int to the operands stack and type to the types stack
 def p_np_add_int(p):
