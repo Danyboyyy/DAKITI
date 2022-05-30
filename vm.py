@@ -39,6 +39,9 @@ globalVars_memory = {}
 tempVars_memory = {}
 constants_memory = {}
 
+# Auxiliary variables
+current = 0
+
 # Store global vars
 for var in vars_table[programName]['vars']:
     globalVars_memory[vars_table[programName]['vars'][var]['memory']] = None
@@ -102,11 +105,11 @@ def changeToUpperCase(res):
     else:
         utils.showError('An error ocurredasdfasdf!')
 
-for cuadruple in cuadruples:
-    operator = cuadruple.operator
-    op1 = cuadruple.op1
-    op2 = cuadruple.op2
-    res = cuadruple.res
+while current < len(cuadruples):
+    operator = cuadruples[current].operator
+    op1 = cuadruples[current].op1
+    op2 = cuadruples[current].op2
+    res = cuadruples[current].res
 
     if operator == '+':
         if 13000 <= res < 17000:
@@ -194,5 +197,13 @@ for cuadruple in cuadruples:
         else:
             globalVars_memory[res] = getValue(op1)
     elif operator == 'PRINT':
-        res = cuadruple.res
         print(getValue(res))
+    elif operator == 'GOTO':
+        current = res
+        continue
+    elif operator == 'GOTOF':
+        if getValue(op1) == 'false':
+            current = res
+            continue
+    
+    current += 1
