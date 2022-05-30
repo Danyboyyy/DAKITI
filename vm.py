@@ -97,6 +97,8 @@ def getValue(address):
 
         return tempVars_memory[address]
     else:
+        print(address)
+        print(current)
         utils.showError('Memory error!')
 
 # Change booleans to lowercase
@@ -127,7 +129,7 @@ while current < len(cuadruples):
         if 13000 <= res < 17000:
             tempVars_memory[res] = getValue(op1) + getValue(op2)
         elif 17000 <= res < 18000:
-            tempVars_memory[res] = getValue(op1) + op2
+            tempVars_memory[res] = getValue(op1) + getValue(op2)
         else:
             globalVars_memory[res] = getValue(op1) + getValue(op2)
     elif operator == '-':
@@ -224,5 +226,9 @@ while current < len(cuadruples):
         if getValue(op1) == 'false':
             current = res
             continue
+    elif operator == 'VERIFY':
+        if getValue(op1) < getValue(op2) or getValue(op1) >= getValue(res):
+            utils.showError('Index out of bounds!')
+
     
     current += 1

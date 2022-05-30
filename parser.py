@@ -78,8 +78,8 @@ def p_vars_3(p):
     '''
     vars_3 : VAR_CTE_ID np_add_variable COMMA vars_3
            | VAR_CTE_ID np_add_variable SEMI_COLON vars_2
-           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK np_add_array COMMA vars_3
-           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT RIGHT_BRACK np_add_array SEMI_COLON vars_2
+           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT np_add_cte_int RIGHT_BRACK np_add_array COMMA vars_3
+           | VAR_CTE_ID LEFT_BRACK VAR_CTE_INT np_add_cte_int RIGHT_BRACK np_add_array SEMI_COLON vars_2
     '''
 
 # FUNCTIONS
@@ -333,7 +333,7 @@ def p_while_loop(p):
 
 def p_for_loop(p):
     '''
-    for_loop : FOR LEFT_PAR VAR_CTE_ID np_for_start IN RANGE LEFT_PAR VAR_CTE_INT np_for_range_start COMMA VAR_CTE_INT np_for_range_end RIGHT_PAR RIGHT_PAR body_1 np_for_end
+    for_loop : FOR LEFT_PAR VAR_CTE_ID np_for_start IN RANGE LEFT_PAR VAR_CTE_INT np_add_cte_int np_for_range_start COMMA VAR_CTE_INT np_add_cte_int np_for_range_end RIGHT_PAR RIGHT_PAR body_1 np_for_end
     '''
 
 # Error handling
@@ -581,9 +581,8 @@ def p_np_add_array(p):
     'np_add_array :'
     global currentType, currentVar, currentArraySize
 
-    currentVar = p[-4]
-    currentArraySize = p[-2]
-
+    currentVar = p[-5]
+    currentArraySize = p[-3]
     memoryPos = 0
     if currentFunction == programName:
         memoryPos = vmemory.allocMemory('global', currentType, currentArraySize)
@@ -594,6 +593,17 @@ def p_np_add_array(p):
         vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'size': currentArraySize, 'memory': memoryPos}
     else:
         utils.showError(f'Variable \'{currentVar}\' has already been declared!')
+
+    memoryAddress = memoryPos
+    if memoryAddress not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][memoryAddress] = {'type': 'int', 'memory': memoryPos}
+    if 0 not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][0] = {'type': 'int', 'memory': memoryPos}
+    if currentArraySize not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][currentArraySize] = {'type': 'int', 'memory': memoryPos}
 
 # Storing a variable's type
 def p_np_current_type(p):
@@ -648,25 +658,35 @@ def p_np_add_id_array(p):
     arr = p[-5]
     idx = operandsStack.pop()
     typesStack.pop()
-
+    
     if arr in vars_table[currentFunction]['vars']:
         if 'size' in vars_table[currentFunction]['vars'][arr]:
-            cuadruples.append(Cuadruple('VERIFY', idx, 0, vars_table[currentFunction]['vars'][arr]['size'] - 1))
+            cuadruples.append(Cuadruple('VERIFY', idx, constants_table['int'][0]['memory'], constants_table['int'][vars_table[currentFunction]['vars'][arr]['size']]['memory']))
         else:
             utils.showError(f'Variable \'{arr}\' has not been declared as an array!')
     elif arr in vars_table[programName]['vars']:
         if 'size' in vars_table[programName]['vars'][arr]:
-            cuadruples.append(Cuadruple('VERIFY', idx, 0, vars_table[programName]['vars'][arr]['size'] - 1))
+            cuadruples.append(Cuadruple('VERIFY', idx, constants_table['int'][0]['memory'], constants_table['int'][vars_table[programName]['vars'][arr]['size']]['memory']))
         else:
             utils.showError(f'Variable \'{arr}\' has not been declared as an array!')
     else:
         utils.showError(f'Variable \'{arr}\' has not been declared!')
     
     memoryPos = vmemory.allocMemory('temp', 'pointer', 1)
-    cuadruples.append(Cuadruple('+', idx, vars_table[currentFunction]['vars'][arr]['memory'], memoryPos))
+    cuadruples.append(Cuadruple('+', idx, constants_table['int'][vars_table[currentFunction]['vars'][arr]['memory']]['memory'], memoryPos))
 
     operandsStack.append('(' + str(memoryPos) + ')')
     typesStack.append(vars_table[currentFunction]['vars'][arr]['type'])
+
+def p_np_add_cte_int(p):
+    'np_add_cte_int :'
+    global operandsStack, typesStack
+
+    operand = p[-1]
+
+    if operand not in constants_table['int']:
+        memoryPos = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][operand] = {'type': 'int', 'memory': memoryPos}
 
 # Add int to the operands stack and type to the types stack
 def p_np_add_int(p):

@@ -3,19 +3,22 @@ Programming Language for my Compilers class.
 
 
 ## Avance 1:
-Análisis Léxico y Sintáctico del lenguaje implementado en Python usando la librería PLY. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.txt>"
+Análisis Léxico y Sintáctico del lenguaje. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.txt>"
 
 ## Avance 2:
-Semántica básica de variables: directorio de procedimientos y tablas de variables. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
+Semántica básica de variables: Directorio de Procedimientos y Tablas de Variables. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
 
 ## Avance 3:
-Semántica básica de expresiones: cubo semántico, generación de código de expresiones ariméticas y estatutos secuenciales. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
+Semántica básica de expresiones: Cubo Semántico. Generación de Código de Expresiones Aritméticas y Estatutos Secuenciales. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
 
 ## Avance 4:
-Generación de código para estatutos condicionales: decisiones/ciclos. Cuádruplos para if(if, else if, else), while, y for controlado. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
+Generación de Código de Estatutos Condicionale: decisiones/ciclos. Cuádruplos para if(if, else if, else), while, y for controlado. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
 
 ## Avance 5:
-Generacion de código para funciones y sus llamadas. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
+Generación de Código de Funciones. Para correr el parser ejecutar el comando "python parser.py <nombre_del_archivo.dak>"
 
 ## Avance 6:
-Mapa de memoria de ejecución para la máquina virtual. Ejecución de expresiones ariméticas y estatutos secuenciales. Para correr el parser ejecutar el comando "python vm.py <nombre_del_archivo.dak>"
+Mapa de Memoria de ejecución para la Máquina Virtual. Máquina Virtual: Ejecución de Expresiones Aritméticas y Estatutos Secuenciales. Para correr el parser ejecutar el comando "python vm.py <nombre_del_archivo.dak>"
+
+## Avance 7:
+Generación de Código de Arreglos. Máquina Virtual: Ejecución de Estatutos Condicionales y Arreglos. Para correr el parser ejecutar el comando "python vm.py <nombre_del_archivo.dak>"
