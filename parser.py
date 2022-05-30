@@ -1,4 +1,5 @@
 import sys
+from traceback import print_stack
 import ply.yacc as yacc
 from lexer import tokens
 from collections import deque
@@ -48,12 +49,6 @@ def p_program_1(p):
     '''
     program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN np_set_main body_1 END np_program_end
     '''
-    # utils.displayVarsTable(vars_table)
-    # utils.displayConstantsTable(constants_table)
-    # utils.displayCuadruples(cuadruples)
-    # utils.displayStack(operandsStack)
-    # utils.displayStack(typesStack)
-    # utils.displayStack(operatorsStack)
 
 def p_program_vars(p):
     '''
@@ -171,7 +166,7 @@ def p_statements(p):
 def p_assignment_1(p):
     '''
     assignment_1 : VAR_CTE_ID np_add_id EQUAL np_add_operator hyper_expression_1 np_assignment SEMI_COLON
-                 | VAR_CTE_ID LEFT_BRACK hyper_expression_1 RIGHT_BRACK EQUAL np_add_operator hyper_expression_1 SEMI_COLON
+                 | VAR_CTE_ID LEFT_BRACK np_add_bottom hyper_expression_1 RIGHT_BRACK np_add_id_array np_remove_bottom EQUAL np_add_operator hyper_expression_1 np_assignment SEMI_COLON
     '''
 
 # FUNCTION CALLS
@@ -303,7 +298,7 @@ def p_factor_1(p):
 def p_var_cte(p):
     '''
     var_cte : VAR_CTE_ID np_add_id
-            | VAR_CTE_ID LEFT_BRACK hyper_expression_1 RIGHT_BRACK
+            | VAR_CTE_ID LEFT_BRACK np_add_bottom hyper_expression_1 RIGHT_BRACK np_add_id_array np_remove_bottom
             | VAR_CTE_INT np_add_int
             | VAR_CTE_FLOAT np_add_float
             | TRUE np_add_bool
@@ -486,7 +481,7 @@ def p_np_function_call_start(p):
         operandsStack.append('(')
         cuadruples.append(Cuadruple('ERA', None, None, calledFunction))
     else:
-        utils.showError(f'Function \'{currentFunction}\' has not been defined!')
+        utils.showError(f'Function \'{calledFunction}\' has not been defined!')
 
 # Validate that the parameters type match
 def p_np_check_parameter(p):
@@ -620,8 +615,7 @@ def p_np_add_bottom(p):
     'np_add_bottom :'
     global operatorsStack
 
-    operator = p[-1]
-    operatorsStack.append(operator)
+    operatorsStack.append('(')
 
 # Removing fake bottom
 def p_np_remove_bottom(p):
@@ -633,7 +627,7 @@ def p_np_remove_bottom(p):
 # Add id to the operands stack and type to the types stack
 def p_np_add_id(p):
     'np_add_id :'
-    global currentFunction, programName
+    global currentFunction, programName, operandsStack, typesStack
     
     operand = p[-1]
 
@@ -645,6 +639,34 @@ def p_np_add_id(p):
         typesStack.append(vars_table[programName]['vars'][operand]['type'])
     else:
         utils.showError(f'Variable \'{operand}\' has not been declared!')
+
+# Add id of array to operands stack and type to the types stack and generate related cuadruples
+def p_np_add_id_array(p):
+    'np_add_id_array :'
+    global operandsStack, typesStack, cuadruples, vars_table, currentFunction, programName
+    
+    arr = p[-5]
+    idx = operandsStack.pop()
+    typesStack.pop()
+
+    if arr in vars_table[currentFunction]['vars']:
+        if 'size' in vars_table[currentFunction]['vars'][arr]:
+            cuadruples.append(Cuadruple('VERIFY', idx, 0, vars_table[currentFunction]['vars'][arr]['size'] - 1))
+        else:
+            utils.showError(f'Variable \'{arr}\' has not been declared as an array!')
+    elif arr in vars_table[programName]['vars']:
+        if 'size' in vars_table[programName]['vars'][arr]:
+            cuadruples.append(Cuadruple('VERIFY', idx, 0, vars_table[programName]['vars'][arr]['size'] - 1))
+        else:
+            utils.showError(f'Variable \'{arr}\' has not been declared as an array!')
+    else:
+        utils.showError(f'Variable \'{arr}\' has not been declared!')
+    
+    memoryPos = vmemory.allocMemory('temp', 'pointer', 1)
+    cuadruples.append(Cuadruple('+', idx, vars_table[currentFunction]['vars'][arr]['memory'], memoryPos))
+
+    operandsStack.append('(' + str(memoryPos) + ')')
+    typesStack.append(vars_table[currentFunction]['vars'][arr]['type'])
 
 # Add int to the operands stack and type to the types stack
 def p_np_add_int(p):
