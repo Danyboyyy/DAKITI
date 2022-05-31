@@ -964,8 +964,13 @@ def p_np_for_range_start(p):
     else:
         memoryPos = constants_table['int'][start]['memory']
 
+    memoryVC = vmemory.allocMemory('temp', 'int', 1)
+
+    operandsStack.append(memoryVC)
+    typesStack.append('int')
+
     cuadruples.append(Cuadruple('=', memoryPos, None, var))
-    cuadruples.append(Cuadruple('=', var, None, 'VC'))
+    cuadruples.append(Cuadruple('=', var, None, memoryVC))
 
 def p_np_for_range_end(p):
     'np_for_range_end :'
@@ -980,11 +985,14 @@ def p_np_for_range_end(p):
         constants_table['int'][end] = {'type': 'int', 'memory': memoryPos}
     else:
         memoryPos = constants_table['int'][end]['memory']
-    
-    memoryPos1 = vmemory.allocMemory('temp', 'bool', 1)
 
-    cuadruples.append(Cuadruple('=', memoryPos, None, 'VF'))
-    cuadruples.append(Cuadruple('<', 'VC', 'VF', memoryPos1))
+    memoryPos1 = vmemory.allocMemory('temp', 'bool', 1)
+    memoryVF = vmemory.allocMemory('temp', 'int', 1)
+
+    vc = operandsStack[-1]
+
+    cuadruples.append(Cuadruple('=', memoryPos, None, memoryVF))
+    cuadruples.append(Cuadruple('<', vc, memoryVF, memoryPos1))
     jumpsStack.append(len(cuadruples) - 1)
     cuadruples.append(Cuadruple('GOTOF', memoryPos1, None, 0))
     jumpsStack.append(len(cuadruples) - 1)
@@ -993,12 +1001,15 @@ def p_np_for_range_end(p):
     
 def p_np_for_end(p):
     'np_for_end :'
-    global cuadruples, operandsStack, jumpsStack, numTemps
+    global cuadruples, operandsStack, typesStack, jumpsStack, numTemps
+
+    vc = operandsStack.pop()
+    typesStack.pop()
 
     memoryPos = vmemory.allocMemory('temp', 'int', 1)
 
-    cuadruples.append(Cuadruple('+', 'VC', 1, memoryPos))
-    cuadruples.append(Cuadruple('=', memoryPos, None, 'VC'))
+    cuadruples.append(Cuadruple('+', vc, 1, memoryPos))
+    cuadruples.append(Cuadruple('=', memoryPos, None, vc))
 
     end = jumpsStack.pop()
     ret = jumpsStack.pop()
