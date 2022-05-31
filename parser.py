@@ -950,12 +950,10 @@ def p_np_for_start(p):
     
 def p_np_for_range_start(p):
     'np_for_range_start :'
-    global cuadruples, operandsStack, typesStack, controlVar, numTemps
+    global cuadruples, operandsStack, typesStack, numTemps
 
-    start = p[-1]
-    controlVar = start
-    var = operandsStack.pop()
-    typesStack.pop()
+    start = p[-2]
+    var = operandsStack[-1]
 
     memoryPos = 0
     if start not in constants_table['int']:
@@ -972,12 +970,13 @@ def p_np_for_range_start(p):
     cuadruples.append(Cuadruple('=', memoryPos, None, var))
     cuadruples.append(Cuadruple('=', var, None, memoryVC))
 
+    numTemps += 1
+
 def p_np_for_range_end(p):
     'np_for_range_end :'
-    global cuadruples, operandsStack, jumpsStack, controlVar, finalVar, numTemps
+    global cuadruples, operandsStack, jumpsStack, controlVar, numTemps
 
-    end = p[-1]
-    finalVar = end
+    end = p[-2]
 
     memoryPos = 0
     if end not in constants_table['int']:
@@ -992,12 +991,12 @@ def p_np_for_range_end(p):
     vc = operandsStack[-1]
 
     cuadruples.append(Cuadruple('=', memoryPos, None, memoryVF))
-    cuadruples.append(Cuadruple('<', vc, memoryVF, memoryPos1))
+    cuadruples.append(Cuadruple('<=', vc, memoryVF, memoryPos1))
     jumpsStack.append(len(cuadruples) - 1)
     cuadruples.append(Cuadruple('GOTOF', memoryPos1, None, 0))
     jumpsStack.append(len(cuadruples) - 1)
 
-    numTemps += 1
+    numTemps += 2
     
 def p_np_for_end(p):
     'np_for_end :'
@@ -1005,11 +1004,21 @@ def p_np_for_end(p):
 
     vc = operandsStack.pop()
     typesStack.pop()
+    var = operandsStack.pop()
+    typesStack.pop()
 
     memoryPos = vmemory.allocMemory('temp', 'int', 1)
 
-    cuadruples.append(Cuadruple('+', vc, 1, memoryPos))
+    memoryOne = 0
+    if 1 not in constants_table['int']:
+        memoryOne = vmemory.allocMemory('constant', 'int', 1)
+        constants_table['int'][1] = {'type': 'int', 'memory': memoryOne}
+    else:
+        memoryOne = constants_table['int'][1]['memory']
+
+    cuadruples.append(Cuadruple('+', vc, memoryOne, memoryPos))
     cuadruples.append(Cuadruple('=', memoryPos, None, vc))
+    cuadruples.append(Cuadruple('=', vc, None, var))
 
     end = jumpsStack.pop()
     ret = jumpsStack.pop()
