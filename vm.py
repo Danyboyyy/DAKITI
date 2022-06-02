@@ -32,39 +32,83 @@ cuadruples = elements[0]
 vars_table = elements[1]
 constants_table = elements[2]
 programName = elements[3]
+totalTemps = elements[4]
 
 # Memory
-localVars_memory = {}
-globalVars_memory = {}
-tempVars_memory = {}
-constants_memory = {}
+localInts = []
+localFloats = []
+localBools = []
+localStrings = []
+
+globalInts = []
+globalFloats = []
+globalBools = []
+globalStrings = []
+
+constantInts = []
+constantFloats = []
+constantBools = []
+constantStrings = []
+
+tempInts = []
+tempFloats = []
+tempBools = []
+tempStrings = []
+tempPointers = []
 
 # Auxiliary variables
 current = 0
 
 # Store global vars
 for var in vars_table[programName]['vars']:
-    globalVars_memory[vars_table[programName]['vars'][var]['memory']] = None
+    if vars_table[programName]['vars'][var]['type'] == 'int':
+        if 'size' in vars_table[programName]['vars'][var]:
+            for i in range(0, vars_table[programName]['vars'][var]['size']):
+                globalInts.append(None)
+        else:
+            globalInts.append(None)
+    if vars_table[programName]['vars'][var]['type'] == 'float':
+        if 'size' in vars_table[programName]['vars'][var]:
+            for i in range(0, vars_table[programName]['vars'][var]['size']):
+                globalInts.append(None)
+        else:
+            globalFloats.append(None)
+    if vars_table[programName]['vars'][var]['type'] == 'bool':
+        if 'size' in vars_table[programName]['vars'][var]:
+            for i in range(0, vars_table[programName]['vars'][var]['size']):
+                globalInts.append(None)
+        else:
+            globalBools.append(None)
+    if vars_table[programName]['vars'][var]['type'] == 'string':
+        if 'size' in vars_table[programName]['vars'][var]:
+            for i in range(0, vars_table[programName]['vars'][var]['size']):
+                globalInts.append(None)
+        else:
+            globalStrings.append(None)
 
 # Store constants
 for type in constants_table:
     for constant in constants_table[type]:
-        constants_memory[constants_table[type][constant]['memory']] = constant
+        if type == 'int':
+            constantInts.append(constant)
+        if type == 'float':
+            constantFloats.append(constant)
+        if type == 'bool':
+            constantBools.append(constant)
+        if type == 'string':
+            constantStrings.append(constant)
 
-print('Global')
-utils.displayMemory(globalVars_memory)
-print('Constants')
-utils.displayMemory(constants_memory)
-utils.displayCuadruples(cuadruples)
-
-# def setLocalMemory(functionName):
-#     global localVars_memory, tempVars_memory
-
-#     localVars_memory.clear()
-#     tempVars_memory.clear()
-    
-#     for var in vars_table[functionName]['vars']:
-#         localVars_memory[vars_table[functionName]['vars'][var]['memory']] = None
+# Store temps
+for i in range(0, totalTemps['int']):
+    tempInts.append(None)
+for i in range(0, totalTemps['float']):
+    tempFloats.append(None)
+for i in range(0, totalTemps['bool']):
+    tempBools.append(None)
+for i in range(0, totalTemps['string']):
+    tempStrings.append(None)
+for i in range(0, totalTemps['pointer']):
+    tempPointers.append(None)
 
 # Access value based on the memory address
 def getValue(address):
@@ -74,18 +118,61 @@ def getValue(address):
     
     if 1000 <= address < 5000: # Local variables
         pass # Not handling local memory yet
-    elif 5000 <= address < 9000: # Global Variables
-        if globalVars_memory[address] == None:
+    # Global Variables
+    elif 5000 <= address < 6000:
+        if globalInts[address - 5000] == None:
             utils.showError('Variable does not have a value!')
-        return globalVars_memory[address]
-    elif 9000 <= address < 13000: # Constants
-        if constants_memory[address] == None:
+        return globalInts[address - 5000]
+    elif 6000 <= address < 7000:
+        if globalFloats[address - 6000] == None:
             utils.showError('Variable does not have a value!')
-        return constants_memory[address]
-    elif 13000 <= address < 18000: # Temp variables
-        if tempVars_memory[address] == None:
+        return globalFloats[address - 5000]
+    elif 7000 <= address < 8000:
+        if globalBools[address - 7000] == None:
             utils.showError('Variable does not have a value!')
-        return tempVars_memory[address]
+        return globalBools[address - 7000]
+    elif 8000 <= address < 9000:
+        if globalStrings[address - 8000] == None:
+            utils.showError('Variable does not have a value!')
+        return globalStrings[address - 8000]
+    # Constants
+    elif 9000 <= address < 10000:
+        if constantInts[address - 9000] == None:
+            utils.showError('Variable does not have a value!')
+        return constantInts[address - 9000]
+    elif 10000 <= address < 11000:
+        if constantFloats[address - 10000] == None:
+            utils.showError('Variable does not have a value!')
+        return constantFloats[address - 10000]
+    elif 11000 <= address < 12000:
+        if constantBools[address - 11000] == None:
+            utils.showError('Variable does not have a value!')
+        return constantBools[address - 11000]
+    elif 12000 <= address < 13000:
+        if constantStrings[address - 12000] == None:
+            utils.showError('Variable does not have a value!')
+        return constantStrings[address - 12000]
+    # Temp variables
+    elif 13000 <= address < 14000:
+        if tempInts[address - 13000] == None:
+            utils.showError('Variable does not have a value!')
+        return tempInts[address - 13000]
+    elif 14000 <= address < 15000:
+        if tempFloats[address - 14000] == None:
+            utils.showError('Variable does not have a value!')
+        return tempFloats[address - 14000]
+    elif 15000 <= address < 16000:
+        if tempBools[address - 15000] == None:
+            utils.showError('Variable does not have a value!')
+        return tempBools[address - 15000]
+    elif 16000 <= address < 17000:
+        if tempStrings[address - 16000] == None:
+            utils.showError('Variable does not have a value!')
+        return tempStrings[address - 16000]
+    elif 17000 <= address < 18000:
+        if tempPointers[address - 17000] == None:
+            utils.showError('Variable does not have a value!')
+        return tempPointers[address - 17000]
     else:
         utils.showError('Memory error!')
 
@@ -114,98 +201,329 @@ while current < len(cuadruples):
     res = cuadruples[current].res
 
     if operator == '+':
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = getValue(op1) + getValue(op2)
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = getValue(op1) + getValue(op2)
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = getValue(op1) + getValue(op2)
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = getValue(op1) + getValue(op2)
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = getValue(op1) + getValue(op2)
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = getValue(op1) + getValue(op2)
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = getValue(op1) + getValue(op2)
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = getValue(op1) + getValue(op2)
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = getValue(op1) + getValue(op2)
         elif 17000 <= res < 18000:
-            tempVars_memory[res] = getValue(op1) + getValue(op2)
-        else:
-            globalVars_memory[res] = getValue(op1) + getValue(op2)
+            tempPointers[res - 17000] = getValue(op1) + getValue(op2)
     elif operator == '-':
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = getValue(op1) - getValue(op2)
-        else:
-            globalVars_memory[res] = getValue(op1) - getValue(op2)
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = getValue(op1) - getValue(op2)
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = getValue(op1) - getValue(op2)
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = getValue(op1) - getValue(op2)
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = getValue(op1) - getValue(op2)
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = getValue(op1) - getValue(op2)
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = getValue(op1) - getValue(op2)
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = getValue(op1) - getValue(op2)
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = getValue(op1) - getValue(op2)
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = getValue(op1) - getValue(op2)
     elif operator == '*':
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = getValue(op1) * getValue(op2)
-        else:
-            globalVars_memory[res] = getValue(op1) * getValue(op2)
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = getValue(op1) * getValue(op2)
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = getValue(op1) * getValue(op2)
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = getValue(op1) * getValue(op2)
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = getValue(op1) * getValue(op2)
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = getValue(op1) * getValue(op2)
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = getValue(op1) * getValue(op2)
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = getValue(op1) * getValue(op2)
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = getValue(op1) * getValue(op2)
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = getValue(op1) * getValue(op2)
     elif operator == '/':
         if getValue(op2) == 0:
             utils.showError('Cannot perform a division by 0!')
 
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = getValue(op1) / getValue(op2)
-        else:
-            globalVars_memory[res] = getValue(op1) / getValue(op2)
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = getValue(op1) / getValue(op2)
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = getValue(op1) / getValue(op2)
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = getValue(op1) / getValue(op2)
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = getValue(op1) / getValue(op2)
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = getValue(op1) / getValue(op2)
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = getValue(op1) / getValue(op2)
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = getValue(op1) / getValue(op2)
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = getValue(op1) / getValue(op2)
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = getValue(op1) / getValue(op2)
     elif operator == '%':
         if getValue(op2) == 0:
             utils.showError('Cannot perform a division by 0!')
             
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = getValue(op1) % getValue(op2)
-        else:
-            globalVars_memory[res] = getValue(op1) % getValue(op2)
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = getValue(op1) % getValue(op2)
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = getValue(op1) % getValue(op2)
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = getValue(op1) % getValue(op2)
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = getValue(op1) % getValue(op2)
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = getValue(op1) % getValue(op2)
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = getValue(op1) % getValue(op2)
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = getValue(op1) % getValue(op2)
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = getValue(op1) % getValue(op2)
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = getValue(op1) % getValue(op2)
     elif operator == '<':
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = changeToLowerCase(getValue(op1) < getValue(op2))
-        else:
-            globalVars_memory[res] = changeToLowerCase(getValue(op1) < getValue(op2))
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = changeToLowerCase(getValue(op1) < getValue(op2))
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = changeToLowerCase(getValue(op1) < getValue(op2))
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = changeToLowerCase(getValue(op1) < getValue(op2))
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = changeToLowerCase(getValue(op1) < getValue(op2))
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = changeToLowerCase(getValue(op1) < getValue(op2))
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = changeToLowerCase(getValue(op1) < getValue(op2))
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = changeToLowerCase(getValue(op1) < getValue(op2))
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = changeToLowerCase(getValue(op1) < getValue(op2))
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = changeToLowerCase(getValue(op1) < getValue(op2))
     elif operator == '<=':
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = changeToLowerCase(getValue(op1) <= getValue(op2))
-        else:
-            globalVars_memory[res] = changeToLowerCase(getValue(op1) <= getValue(op2))
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = changeToLowerCase(getValue(op1) <= getValue(op2))
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = changeToLowerCase(getValue(op1) <= getValue(op2))
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = changeToLowerCase(getValue(op1) <= getValue(op2))
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = changeToLowerCase(getValue(op1) <= getValue(op2))
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = changeToLowerCase(getValue(op1) <= getValue(op2))
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = changeToLowerCase(getValue(op1) <= getValue(op2))
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = changeToLowerCase(getValue(op1) <= getValue(op2))
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = changeToLowerCase(getValue(op1) <= getValue(op2))
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = changeToLowerCase(getValue(op1) <= getValue(op2))
     elif operator == '>':
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = changeToLowerCase(getValue(op1) > getValue(op2))
-        else:
-            globalVars_memory[res] = changeToLowerCase(getValue(op1) > getValue(op2))
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = changeToLowerCase(getValue(op1) > getValue(op2))
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = changeToLowerCase(getValue(op1) > getValue(op2))
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = changeToLowerCase(getValue(op1) > getValue(op2))
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = changeToLowerCase(getValue(op1) > getValue(op2))
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = changeToLowerCase(getValue(op1) > getValue(op2))
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = changeToLowerCase(getValue(op1) > getValue(op2))
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = changeToLowerCase(getValue(op1) > getValue(op2))
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = changeToLowerCase(getValue(op1) > getValue(op2))
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = changeToLowerCase(getValue(op1) > getValue(op2))
     elif operator == '>=':
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = changeToLowerCase(getValue(op1) >= getValue(op2))
-        else:
-            globalVars_memory[res] = changeToLowerCase(getValue(op1) >= getValue(op2))
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = changeToLowerCase(getValue(op1) >= getValue(op2))
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = changeToLowerCase(getValue(op1) >= getValue(op2))
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = changeToLowerCase(getValue(op1) >= getValue(op2))
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = changeToLowerCase(getValue(op1) >= getValue(op2))
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = changeToLowerCase(getValue(op1) >= getValue(op2))
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = changeToLowerCase(getValue(op1) >= getValue(op2))
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = changeToLowerCase(getValue(op1) >= getValue(op2))
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = changeToLowerCase(getValue(op1) >= getValue(op2))
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = changeToLowerCase(getValue(op1) >= getValue(op2))
     elif operator == '==':
         if 13000 <= res < 17000:
             if 15000 <= op1 < 16000 and 15000 <= op2 < 16000:
-                tempVars_memory[res] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
+                if 13000 <= res < 14000:
+                    tempInts[res - 13000] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
+                elif 14000 <= res < 15000:
+                    tempFloats[res - 14000] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
+                elif 15000 <= res < 16000:
+                    tempBools[res - 15000] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
+                elif 16000 <= res < 17000:
+                    tempStrings[res - 16000] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
+                elif 17000 <= res < 18000:
+                    tempPointers[res - 17000] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
             else:
-                tempVars_memory[res] = changeToLowerCase(getValue(op1) == getValue(op2))
+                if 13000 <= res < 14000:
+                    tempInts[res - 13000] = changeToLowerCase(getValue(op1) == getValue(op2))
+                elif 14000 <= res < 15000:
+                    tempFloats[res - 14000] = changeToLowerCase(getValue(op1) == getValue(op2))
+                elif 15000 <= res < 16000:
+                    tempBools[res - 15000] = changeToLowerCase(getValue(op1) == getValue(op2))
+                elif 16000 <= res < 17000:
+                    tempStrings[res - 16000] = changeToLowerCase(getValue(op1) == getValue(op2))
+                elif 17000 <= res < 18000:
+                    tempPointers[res - 17000] = changeToLowerCase(getValue(op1) == getValue(op2))
         else:
-            if (2000 <= op1 < 3000 or 6000 <= op1 < 7000 or 10000 <= op1 < 11000) and (2000 <= op2 < 3000 or 6000 <= op2 < 7000 or 10000 <= op2 < 11000):
-                globalVars_memory[res] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
+            if (3000 <= op1 < 4000 or 7000 <= op1 < 8000 or 11000 <= op1 < 12000) and (3000 <= op2 < 4000 or 7000 <= op2 < 8000 or 11000 <= op2 < 12000):
+                if 5000 <= res < 6000:
+                    globalInts[res - 5000] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
+                elif 6000 <= res < 7000:
+                    globalFloats[res - 6000] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
+                elif 7000 <= res < 8000:
+                    globalBools[res - 7000] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
+                elif 8000 <= res < 9000:
+                    globalStrings[res - 8000] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
             else:
-                globalVars_memory[res] = changeToLowerCase(getValue(op1) == getValue(op2))
+                if 5000 <= res < 6000:
+                    globalInts[res - 5000] = changeToLowerCase(getValue(op1) == getValue(op2))
+                elif 6000 <= res < 7000:
+                    globalFloats[res - 6000] = changeToLowerCase(getValue(op1) == getValue(op2))
+                elif 7000 <= res < 8000:
+                    globalBools[res - 7000] = changeToLowerCase(getValue(op1) == getValue(op2))
+                elif 8000 <= res < 9000:
+                    globalStrings[res - 8000] = changeToLowerCase(getValue(op1) == getValue(op2))
     elif operator == '<>':
         if 13000 <= res < 17000:
             if 15000 <= op1 < 16000 and 15000 <= op2 < 16000:
-                tempVars_memory[res] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
+                if 13000 <= res < 14000:
+                    tempInts[res - 13000] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
+                elif 14000 <= res < 15000:
+                    tempFloats[res - 14000] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
+                elif 15000 <= res < 16000:
+                    tempBools[res - 15000] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
+                elif 16000 <= res < 17000:
+                    tempStrings[res - 16000] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
+                elif 17000 <= res < 18000:
+                    tempPointers[res - 17000] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
             else:
-                tempVars_memory[res] = changeToLowerCase(getValue(op1) != getValue(op2))
+                if 13000 <= res < 14000:
+                    tempInts[res - 13000] = changeToLowerCase(getValue(op1) != getValue(op2))
+                elif 14000 <= res < 15000:
+                    tempFloats[res - 14000] = changeToLowerCase(getValue(op1) != getValue(op2))
+                elif 15000 <= res < 16000:
+                    tempBools[res - 15000] = changeToLowerCase(getValue(op1) != getValue(op2))
+                elif 16000 <= res < 17000:
+                    tempStrings[res - 16000] = changeToLowerCase(getValue(op1) != getValue(op2))
+                elif 17000 <= res < 18000:
+                    tempPointers[res - 17000] = changeToLowerCase(getValue(op1) != getValue(op2))
         else:
-            if (2000 <= op1 < 3000 or 6000 <= op1 < 7000 or 10000 <= op1 < 11000) and (2000 <= op2 < 3000 or 6000 <= op2 < 7000 or 10000 <= op2 < 11000):
-                globalVars_memory[res] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
+            if (3000 <= op1 < 4000 or 7000 <= op1 < 8000 or 11000 <= op1 < 12000) and (3000 <= op2 < 4000 or 7000 <= op2 < 8000 or 11000 <= op2 < 12000):
+                if 5000 <= res < 6000:
+                    globalInts[res - 5000] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
+                elif 6000 <= res < 7000:
+                    globalFloats[res - 6000] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
+                elif 7000 <= res < 8000:
+                    globalBools[res - 7000] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
+                elif 8000 <= res < 9000:
+                    globalStrings[res - 8000] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
             else:
-                globalVars_memory[res] = changeToLowerCase(getValue(op1) != getValue(op2))
+                if 5000 <= res < 6000:
+                    globalInts[res - 5000] = changeToLowerCase(getValue(op1) != getValue(op2))
+                elif 6000 <= res < 7000:
+                    globalFloats[res - 6000] = changeToLowerCase(getValue(op1) != getValue(op2))
+                elif 7000 <= res < 8000:
+                    globalBools[res - 7000] = changeToLowerCase(getValue(op1) != getValue(op2))
+                elif 8000 <= res < 9000:
+                    globalStrings[res - 8000] = changeToLowerCase(getValue(op1) != getValue(op2))
     elif operator == '&&':
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
-        else:
-            globalVars_memory[res] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = changeToLowerCase(changeToUpperCase(getValue(op1)) and changeToUpperCase(getValue(op2)))
     elif operator == '||':
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
-        else:
-            globalVars_memory[res] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = changeToLowerCase(changeToUpperCase(getValue(op1)) or changeToUpperCase(getValue(op2)))
     elif operator == '=':
         resToString = str(res)
         if resToString[0] == '(' and resToString[-1] == ')':
             res = getValue(int(resToString[1:-1]))
-        if 13000 <= res < 17000:
-            tempVars_memory[res] = getValue(op1)
-        else:
-            globalVars_memory[res] = getValue(op1)
+
+        if 5000 <= res < 6000:
+            globalInts[res - 5000] = getValue(op1)
+        elif 6000 <= res < 7000:
+            globalFloats[res - 6000] = getValue(op1)
+        elif 7000 <= res < 8000:
+            globalBools[res - 7000] = getValue(op1)
+        elif 8000 <= res < 9000:
+            globalStrings[res - 8000] = getValue(op1)
+        elif 13000 <= res < 14000:
+            tempInts[res - 13000] = getValue(op1)
+        elif 14000 <= res < 15000:
+            tempFloats[res - 14000] = getValue(op1)
+        elif 15000 <= res < 16000:
+            tempBools[res - 15000] = getValue(op1)
+        elif 16000 <= res < 17000:
+            tempStrings[res - 16000] = getValue(op1)
+        elif 17000 <= res < 18000:
+            tempPointers[res - 17000] = getValue(op1)
     elif operator == 'PRINT':
         print(getValue(res))
     elif operator == 'GOTO':

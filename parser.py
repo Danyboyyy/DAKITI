@@ -14,6 +14,7 @@ semantic_cube = SemanticCube().semantic_cube # Semantic Cube
 
 vars_table = {} # Variables Table
 constants_table = {'int': {}, 'float': {}, 'bool': {}, 'string': {}} # Constants Table
+totalTemps = {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}
 cuadruples = [] # Cuadrulpes List
 
 # Stacks for building cuadruples
@@ -654,7 +655,7 @@ def p_np_add_id(p):
 # Add id of array to operands stack and type to the types stack and generate related cuadruples
 def p_np_add_id_array(p):
     'np_add_id_array :'
-    global operandsStack, typesStack, cuadruples, vars_table, currentFunction, programName
+    global operandsStack, typesStack, cuadruples, vars_table, currentFunction, programName, totalTemps, numTemps
     
     arr = p[-5]
     idx = operandsStack.pop()
@@ -678,6 +679,9 @@ def p_np_add_id_array(p):
 
     operandsStack.append('(' + str(memoryPos) + ')')
     typesStack.append(vars_table[currentFunction]['vars'][arr]['type'])
+
+    numTemps += 1
+    totalTemps['pointer'] += 1
 
 def p_np_add_cte_int(p):
     'np_add_cte_int :'
@@ -748,7 +752,7 @@ def p_np_add_bool(p):
 # Handle hyper expressions
 def p_np_hyper_expression(p):
     'np_hyper_expression :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps
+    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps, totalTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -769,11 +773,12 @@ def p_np_hyper_expression(p):
                 operandsStack.append(memoryPos)
                 typesStack.append(resultType)
                 numTemps += 1
+                totalTemps[resultType] += 1
 
 # Handle expressions
 def p_np_expression(p):
     'np_expression :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps
+    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps, totalTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -794,11 +799,12 @@ def p_np_expression(p):
                 operandsStack.append(memoryPos)
                 typesStack.append(resultType)
                 numTemps += 1
+                totalTemps[resultType] += 1
 
 # Handle exps
 def p_np_exp(p):
     'np_exp :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps
+    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps, totalTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -819,11 +825,12 @@ def p_np_exp(p):
                 operandsStack.append(memoryPos)
                 typesStack.append(resultType)
                 numTemps += 1
+                totalTemps[resultType] += 1
 
 # Handle terms
 def p_np_term(p):
     'np_term :'
-    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps
+    global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps, totalTemps
 
     if (operatorsStack):
         operator = operatorsStack[-1]
@@ -844,6 +851,7 @@ def p_np_term(p):
                 operandsStack.append(memoryPos)
                 typesStack.append(resultType)
                 numTemps += 1
+                totalTemps[resultType] += 1
 
 # Handle assignments
 def p_np_assignment(p):
@@ -965,7 +973,7 @@ def p_np_for_start(p):
     
 def p_np_for_range_start(p):
     'np_for_range_start :'
-    global cuadruples, operandsStack, typesStack, numTemps
+    global cuadruples, operandsStack, typesStack, numTemps, totalTemps
 
     start = p[-2]
     var = operandsStack[-1]
@@ -986,10 +994,11 @@ def p_np_for_range_start(p):
     cuadruples.append(Cuadruple('=', var, None, memoryVC))
 
     numTemps += 1
+    totalTemps['int'] += 1
 
 def p_np_for_range_end(p):
     'np_for_range_end :'
-    global cuadruples, operandsStack, jumpsStack, controlVar, numTemps
+    global cuadruples, operandsStack, jumpsStack, controlVar, numTemps, totalTemps
 
     end = p[-2]
 
@@ -1012,10 +1021,12 @@ def p_np_for_range_end(p):
     jumpsStack.append(len(cuadruples) - 1)
 
     numTemps += 2
+    totalTemps['int'] += 1
+    totalTemps['bool'] += 1
     
 def p_np_for_end(p):
     'np_for_end :'
-    global cuadruples, operandsStack, typesStack, jumpsStack, numTemps
+    global cuadruples, operandsStack, typesStack, jumpsStack, numTemps, totalTemps
 
     vc = operandsStack.pop()
     typesStack.pop()
@@ -1042,10 +1053,11 @@ def p_np_for_end(p):
     cuadruples[end].res = len(cuadruples)
 
     numTemps += 1
+    totalTemps['int'] += 1
 
 parser = yacc.yacc()
 
 def run(data):
     parser.parse(data)
     
-    return([cuadruples, vars_table, constants_table, programName])
+    return([cuadruples, vars_table, constants_table, programName, totalTemps])
