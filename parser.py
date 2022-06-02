@@ -301,6 +301,7 @@ def p_var_cte(p):
             | VAR_CTE_ID LEFT_BRACK np_add_bottom hyper_expression_1 RIGHT_BRACK np_add_id_array np_remove_bottom
             | VAR_CTE_INT np_add_int
             | VAR_CTE_FLOAT np_add_float
+            | VAR_CTE_STRING np_add_string
             | TRUE np_add_bool
             | FALSE np_add_bool
             | function_call_1 np_check_non_void_function
@@ -495,7 +496,7 @@ def p_np_check_parameter(p):
         paramType = vars_table[currentFunction]['params'][countParams]
 
         if paramType == argumentType:
-            cuadruples.append(Cuadruple('PARAM', argument, None, 'ARGUMENT#'+str(countParams + 1)))
+            cuadruples.append(Cuadruple('PARAM', argument, None, 'PARAM#'+str(countParams + 1)))
         else:
             utils.showError(f'Argument #{countParams + 1} must be of type \'{paramType}\'')
     else:
@@ -715,6 +716,20 @@ def p_np_add_float(p):
 
     operandsStack.append(constants_table['float'][operand]['memory'])
     typesStack.append('float')
+
+# Add string to the operands stack and type to the types stack
+def p_np_add_string(p):
+    'np_add_string :'
+    global operandsStack, typesStack
+
+    operand = p[-1]
+
+    if operand not in constants_table['float']:
+        memoryPos = vmemory.allocMemory('constant', 'string', 1)
+        constants_table['string'][operand] = {'type': 'string', 'memory': memoryPos}
+
+    operandsStack.append(constants_table['string'][operand]['memory'])
+    typesStack.append('string')
 
 # Add bool to the operands stack and type to the types stack
 def p_np_add_bool(p):
