@@ -33,9 +33,9 @@ currentVar = ''
 currentType = ''
 currentArraySize = 0
 
-numParams = 0
-numVars = 0
-numTemps = 0
+numParams = {'int': 0, 'float': 0, 'bool': 0, 'string': 0}
+numVars = {'int': 0, 'float': 0, 'bool': 0, 'string': 0}
+numTemps = {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}
 hasReturn = False
 
 countParams = 0
@@ -357,7 +357,7 @@ def p_np_program_start(p):
     programName = p[-1]
     currentFunction = programName
 
-    vars_table[programName] = {'type': 'void', 'vars': {}, 'params': {}, 'cuadruple': len(cuadruples), 'noVars': 0, 'noParams': 0, 'noTemps': 0}
+    vars_table[programName] = {'type': 'void', 'vars': {}, 'params': {}, 'cuadruple': len(cuadruples), 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
 
     cuadruples.append(Cuadruple('GOTO', None, None, 'main'))
 
@@ -371,7 +371,8 @@ def p_np_program_end(p):
 def p_np_ser_main(p):
     'np_set_main :'
     global cuadruples
-
+    vmemory.freeLocalMemory()
+    vmemory.freeTempMemory()
     cuadruples[0].res = len(cuadruples)
 
 # Adding a function to the functions directory
@@ -379,13 +380,13 @@ def p_np_add_function(p):
     'np_add_function :'
     global currentFunction, currentFunctionType, numVars, numTemps, hasReturn
 
-    numVars = 0
-    numTemps = 0
+    numVars = {'int': 0, 'float': 0, 'bool': 0, 'string': 0}
+    numTemps = {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}
     hasReturn = False
     currentFunction = p[-1]
 
     if currentFunction not in vars_table:
-        vars_table[currentFunction] = {'type': currentFunctionType, 'vars': {}, 'params': {}, 'cuadruple': len(cuadruples), 'noVars': 0, 'noParams': 0, 'noTemps': 0}
+        vars_table[currentFunction] = {'type': currentFunctionType, 'vars': {}, 'params': {}, 'cuadruple': len(cuadruples), 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
 
         if currentFunctionType != 'void':
             if currentFunction not in vars_table[programName]['vars']:
@@ -431,11 +432,12 @@ def p_np_function_parameters(p):
         vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'memory': memoryPos}
 
         if len(vars_table[currentFunction]['params']) == 0:
-            numParams = 0
+            numParams = {'int': 0, 'float': 0, 'bool': 0, 'string': 0}
         
-        vars_table[currentFunction]['params'][numParams] = currentType
+        paramSize = numParams[currentType]
+        vars_table[currentFunction]['params'][paramSize] = currentType
 
-        numParams += 1
+        numParams[currentType] += 1
     else:
         utils.showError(f'Variable \'{currentVar}\' has already been declared!')
 
@@ -444,7 +446,7 @@ def p_np_add_function_info(p):
     'np_add_function_info :'
     global vars_table, numParams, numVars
 
-    vars_table[currentFunction]['noParams'] = len(vars_table[currentFunction]['params'])
+    vars_table[currentFunction]['noParams'] = numParams
     vars_table[currentFunction]['noVars'] = numVars
 
 # Returns in functions
@@ -517,7 +519,7 @@ def p_np_count_parameters(p):
 # Generate gosub cuadruple
 def p_np_function_call_end(p):
     'np_function_call_end :'
-    global cuadruples, currentFunction, operandsStack, vars_table
+    global cuadruples, currentFunction, operandsStack, vars_table, totalTemps, numTemps
 
     cuadruples.append(Cuadruple('GOSUB', None, None, currentFunction))
     operandsStack.pop()
@@ -531,6 +533,9 @@ def p_np_function_call_end(p):
         
         operandsStack.append(memoryTemp)
         typesStack.append(vars_table[currentFunction]['type'])
+
+        numTemps[vars_table[currentFunction]['type']] += 1
+        totalTemps[vars_table[currentFunction]['type']] += 1
     
 # Check usage of void functions
 def p_np_check_void_function(p):
@@ -574,7 +579,7 @@ def p_np_add_variable(p):
             memoryPos = vmemory.allocMemory('local', currentType, 1)
             
         vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'memory': memoryPos}
-        numVars += 1
+        numVars[currentType] += 1
     else:
         utils.showError(f'Variable \'{currentVar}\' has already been declared!')
 
@@ -680,7 +685,7 @@ def p_np_add_id_array(p):
     operandsStack.append('(' + str(memoryPos) + ')')
     typesStack.append(vars_table[currentFunction]['vars'][arr]['type'])
 
-    numTemps += 1
+    numTemps['pointer'] += 1
     totalTemps['pointer'] += 1
 
 def p_np_add_cte_int(p):
@@ -772,7 +777,7 @@ def p_np_hyper_expression(p):
                 cuadruples.append(Cuadruple(operator, left, right, memoryPos))
                 operandsStack.append(memoryPos)
                 typesStack.append(resultType)
-                numTemps += 1
+                numTemps[resultType] += 1
                 totalTemps[resultType] += 1
 
 # Handle expressions
@@ -798,7 +803,7 @@ def p_np_expression(p):
                 cuadruples.append(Cuadruple(operator, left, right, memoryPos))
                 operandsStack.append(memoryPos)
                 typesStack.append(resultType)
-                numTemps += 1
+                numTemps[resultType] += 1
                 totalTemps[resultType] += 1
 
 # Handle exps
@@ -824,7 +829,7 @@ def p_np_exp(p):
                 cuadruples.append(Cuadruple(operator, left, right, memoryPos))
                 operandsStack.append(memoryPos)
                 typesStack.append(resultType)
-                numTemps += 1
+                numTemps[resultType] += 1
                 totalTemps[resultType] += 1
 
 # Handle terms
@@ -850,7 +855,7 @@ def p_np_term(p):
                 cuadruples.append(Cuadruple(operator, left, right, memoryPos))
                 operandsStack.append(memoryPos)
                 typesStack.append(resultType)
-                numTemps += 1
+                numTemps[resultType] += 1
                 totalTemps[resultType] += 1
 
 # Handle assignments
@@ -993,7 +998,7 @@ def p_np_for_range_start(p):
     cuadruples.append(Cuadruple('=', memoryPos, None, var))
     cuadruples.append(Cuadruple('=', var, None, memoryVC))
 
-    numTemps += 1
+    numTemps['int'] += 1
     totalTemps['int'] += 1
 
 def p_np_for_range_end(p):
@@ -1020,7 +1025,8 @@ def p_np_for_range_end(p):
     cuadruples.append(Cuadruple('GOTOF', memoryPos1, None, 0))
     jumpsStack.append(len(cuadruples) - 1)
 
-    numTemps += 2
+    numTemps['int'] += 1
+    numTemps['bool'] += 1
     totalTemps['int'] += 1
     totalTemps['bool'] += 1
     
@@ -1052,7 +1058,7 @@ def p_np_for_end(p):
     cuadruples.append(Cuadruple('GOTO', None, None, ret))
     cuadruples[end].res = len(cuadruples)
 
-    numTemps += 1
+    numTemps['int'] += 1
     totalTemps['int'] += 1
 
 parser = yacc.yacc()
@@ -1060,4 +1066,4 @@ parser = yacc.yacc()
 def run(data):
     parser.parse(data)
     
-    return([cuadruples, vars_table, constants_table, programName, totalTemps])
+    return([cuadruples, vars_table, constants_table, programName, totalTemps, vmemory])
