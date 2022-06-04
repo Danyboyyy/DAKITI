@@ -4,6 +4,7 @@ import sys
 import re
 import parser
 import utils
+from turtle import *
 
 try:
     if not len(sys.argv) == 2:
@@ -39,7 +40,8 @@ callsStack = deque()
 functionsStack = deque()
 currentFunction = ''
 parameters = []
-flag = False
+parametersStack = deque()
+builtIn = False
 
 # Store global vars
 for var in vars_table[programName]['vars']:
@@ -99,7 +101,6 @@ def getValue(address):
     addressToString = str(address)
     if addressToString[0] == '(' and addressToString[-1] == ')':
         address = getValue(int(addressToString[1:-1]))
-    
     # Local variables
     if 1000 <= address < 2000:
         if vmemory.localIntsStack[-1][address - 1000] == None:
@@ -192,10 +193,6 @@ def changeToUpperCase(res):
         return False
     else:
         utils.showError('An error ocurred!')
-
-utils.displayCuadruples(cuadruples)
-utils.displayVarsTable(vars_table)
-print(vars_table)
 
 while current < len(cuadruples):
     operator = cuadruples[current].operator
@@ -661,7 +658,11 @@ while current < len(cuadruples):
         elif 17000 <= res < 18000:
             vmemory.tempPointersStack[-1][res - 17000] = getValue(op1)
     elif operator == 'PRINT':
-        print(getValue(res))
+        res = getValue(res)
+        resToString = str(res)
+        if resToString[0] == '"' and resToString[-1] == '"':
+            res = resToString[1:-1]
+        print(res)
     elif operator == 'GOTO':
         current = res
         continue
@@ -673,8 +674,10 @@ while current < len(cuadruples):
         if getValue(op1) < getValue(op2) or getValue(op1) >= getValue(res):
             utils.showError('Index out of bounds!')
     elif operator == 'ERA':
+        builtIn = False
         currentFunction = res
-        
+        functionsStack.append(currentFunction)
+
         for i in range(0, vars_table[currentFunction]['noVars']['int'] + vars_table[currentFunction]['noParams']['int']):
             vmemory.localInts.append(None)
         for i in range(0, vars_table[currentFunction]['noVars']['float'] + vars_table[currentFunction]['noParams']['float']):
@@ -696,33 +699,94 @@ while current < len(cuadruples):
             vmemory.tempPointers.append(None)
 
         parameters = list(vars_table[currentFunction]['vars'])
+        parametersStack.append(parameters)
+
+        vmemory.resetLocalMemory()
+        vmemory.resetTempMemory()
+
+    elif operator == 'ERA_BIF':
+        builtIn = True
+        currentFunction = res
+        functionsStack.append(currentFunction)
+
+        for i in range(0, vars_table[currentFunction]['noVars']['int'] + vars_table[currentFunction]['noParams']['int']):
+            vmemory.localInts.append(None)
+        for i in range(0, vars_table[currentFunction]['noVars']['float'] + vars_table[currentFunction]['noParams']['float']):
+            vmemory.localFloats.append(None)
+        for i in range(0, vars_table[currentFunction]['noVars']['bool'] + vars_table[currentFunction]['noParams']['bool']):
+            vmemory.localBools.append(None)
+        for i in range(0, vars_table[currentFunction]['noVars']['string'] + vars_table[currentFunction]['noParams']['string']):
+            vmemory.localStrings.append(None)
+        
+        for i in range(0, vars_table[currentFunction]['noTemps']['int']):
+            vmemory.tempInts.append(None)
+        for i in range(0, vars_table[currentFunction]['noTemps']['float']):
+            vmemory.tempFloats.append(None)
+        for i in range(0, vars_table[currentFunction]['noTemps']['bool']):
+            vmemory.tempBools.append(None)
+        for i in range(0, vars_table[currentFunction]['noTemps']['string']):
+            vmemory.tempStrings.append(None)
+        for i in range(0, vars_table[currentFunction]['noTemps']['pointer']):
+            vmemory.tempPointers.append(None)
+
+        parameters = list(vars_table[currentFunction]['vars'])
+        parametersStack.append(parameters)
+
+        vmemory.resetLocalMemory()
+        vmemory.resetTempMemory()
+
 
     elif operator == 'PARAM':
         parameter = op1
         idx = int(res[-1]) - 1
-       
-        if (len(parameters) > 0):
+
+        if (len(parametersStack[-1]) > 0):
             if 1000 <= parameter < 2000 or 5000 <= parameter < 6000 or 9000 <= parameter < 10000 or 13000 <= parameter < 14000:
-                vmemory.localInts[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 1000] = getValue(parameter)
+                vmemory.localIntsStack[-1][vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 1000] = getValue(parameter)
             if 2000 <= parameter < 3000 or 6000 <= parameter < 7000 or 10000 <= parameter < 11000 or 14000 <= parameter < 15000:
-                vmemory.localFloats[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 2000] = getValue(parameter)
+                vmemory.localFloats[-1][vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 2000] = getValue(parameter)
             if 3000 <= parameter < 4000 or 7000 <= parameter < 8000 or 11000 <= parameter < 12000 or 15000 <= parameter < 16000:
-                vmemory.localBools[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 3000] = getValue(parameter)
+                vmemory.localBools[-1][vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 3000] = getValue(parameter)
             if 4000 <= parameter < 5000 or 8000 <= parameter < 9000 or 12000 <= parameter < 13000 or 16000 <= parameter < 17000:
-                vmemory.localStrings[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 4000] = getValue(parameter)
+                vmemory.localStrings[-1][vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 4000] = getValue(parameter)
 
     elif operator == 'GOSUB':
         destination = res
-        
-        callsStack.append(current)
-        functionsStack.append(currentFunction)
-        currentFunction = destination
+        if builtIn:
+            if res == 'penUp':
+                penup()
+            elif res == 'penDown':
+                pendown()
+            elif res == 'forward':
+                forward(vmemory.localIntsStack[-1][0])
+            elif res == 'backward':
+                backward(vmemory.localIntsStack[-1][0])
+            elif res == 'turnRight':
+                right(vmemory.localIntsStack[-1][0])
+            elif res == 'turnLeft':
+                left(vmemory.localIntsStack[-1][0])
+            elif res == 'drawCircle':
+                circle(vmemory.localIntsStack[-1][0])
+            elif res == 'drawRectangle':
+                forward(vmemory.localIntsStack[-1][0])
+                right(90)
+                forward(vmemory.localIntsStack[-1][1])
+                right(90)
+                forward(vmemory.localIntsStack[-1][0])
+                right(90)
+                forward(vmemory.localIntsStack[-1][1])
 
-        vmemory.resetLocalMemory()
-        vmemory.resetTempMemory()
-        
-        current = vars_table[destination]['cuadruple']
-        continue
+            elif res == 'drawArc':
+                circle(vmemory.localIntsStack[-1][0], vmemory.localIntsStack[-1][1])
+            elif res == 'done':
+                done()
+        else:
+            destination = res
+            callsStack.append(current)
+            currentFunction = destination
+            
+            current = vars_table[destination]['cuadruple']
+            continue
     elif operator == 'RETURN':
         currentFunctionType = vars_table[currentFunction]['type']
        
@@ -752,7 +816,11 @@ while current < len(cuadruples):
         vmemory.tempPointersStack.pop()
 
         current = callsStack.pop() + 1
-        currentFunction = functionsStack.pop()
+        parametersStack.pop()
+        if len(functionsStack) > 1:
+            functionsStack.pop()
+            currentFunction = functionsStack.pop()
+
         continue
     elif operator == 'ENDFUNC':
         vmemory.localIntsStack.pop()
@@ -767,7 +835,11 @@ while current < len(cuadruples):
         vmemory.tempPointersStack.pop()
         
         current = callsStack.pop() + 1
-        currentFunction = functionsStack.pop()
+        parametersStack.pop()
+        functionsStack.pop()
+        if len(functionsStack) > 1:
+            functionsStack.pop()
+            currentFunction = functionsStack.pop()
         continue
 
     

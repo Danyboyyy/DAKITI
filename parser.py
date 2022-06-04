@@ -43,11 +43,22 @@ origin = ''
 controlVar = 0
 finalVar = 0
 
+vars_table['penUp'] = {'type': 'void', 'vars': {}, 'params': {}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
+vars_table['penDown'] = {'type': 'void', 'vars': {}, 'params': {}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
+vars_table['forward'] = {'type': 'void', 'vars': {'x': {'type': 'int', 'memory': 1000}}, 'params': {0: 'int'}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 1, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
+vars_table['backward'] = {'type': 'void', 'vars': {'x': {'type': 'int', 'memory': 1000}}, 'params': {0: 'int'}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 1, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
+vars_table['turnRight'] = {'type': 'void', 'vars': {'x': {'type': 'int', 'memory': 1000}}, 'params': {0: 'int'}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 1, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
+vars_table['turnLeft'] = {'type': 'void', 'vars': {'x': {'type': 'int', 'memory': 1000}}, 'params': {0: 'int'}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 1, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
+vars_table['drawCircle'] = {'type': 'void', 'vars': {'x': {'type': 'int', 'memory': 1000}}, 'params': {0: 'int'}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 1, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
+vars_table['drawRectangle'] = {'type': 'void', 'vars': {'x': {'type': 'int', 'memory': 1000}, 'y': {'type': 'int', 'memory': 1001}}, 'params': {0: 'int', 1: 'int'}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 2, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
+vars_table['drawArc'] = {'type': 'void', 'vars': {'x': {'type': 'int', 'memory': 1000}, 'y': {'type': 'int', 'memory': 1001}}, 'params': {0: 'int',  1: 'int'}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 2, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
+vars_table['done'] = {'type': 'void', 'vars': {}, 'params': {}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
+
 ###### PARSER #####
 # PROGRAM
 def p_program_1(p):
     '''
-    program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN np_set_main body_1 END np_program_end
+    program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN np_set_main body_1 np_program_end
     '''
 
 def p_program_vars(p):
@@ -205,15 +216,16 @@ def p_function_call_arguments_3(p):
 
 def p_built_in_functions(p):
     '''
-    built_in_functions : PENUP
-                       | PENDOWN
-                       | FORWARD
-                       | BACKWARD
-                       | TURNRIGHT
-                       | TURNLEFT
-                       | DRAWCIRCLE
-                       | DRAWRECTANGLE
-                       | DRAWARC
+    built_in_functions : PENUP np_built_in_function_call_start
+                       | PENDOWN np_built_in_function_call_start
+                       | FORWARD np_built_in_function_call_start
+                       | BACKWARD np_built_in_function_call_start
+                       | TURNRIGHT np_built_in_function_call_start
+                       | TURNLEFT np_built_in_function_call_start
+                       | DRAWCIRCLE np_built_in_function_call_start
+                       | DRAWRECTANGLE np_built_in_function_call_start
+                       | DRAWARC np_built_in_function_call_start
+                       | DONE np_built_in_function_call_start
     '''
 
 # WRITTING
@@ -474,7 +486,7 @@ def p_np_return_empty(p):
 # Generate era cuadruple
 def p_np_function_call_start(p):
     'np_function_call_start :'
-    global countParams, currentFunction, operandsStack, origin
+    global countParams, currentFunction, operatorsStack, origin
 
     calledFunction = p[-1]
 
@@ -482,8 +494,22 @@ def p_np_function_call_start(p):
         countParams = 0
         origin = currentFunction
         currentFunction = calledFunction
-        operandsStack.append('(')
+        operatorsStack.append('(')
         cuadruples.append(Cuadruple('ERA', None, None, calledFunction))
+    else:
+        utils.showError(f'Function \'{calledFunction}\' has not been defined!')
+
+def p_np_built_in_function_call_start(p):
+    'np_built_in_function_call_start :'
+    global countParams, currentFunction, operatorsStack, origin
+
+    calledFunction = p[-1]
+    if calledFunction in vars_table:
+        countParams = 0
+        origin = currentFunction
+        currentFunction = calledFunction
+        operatorsStack.append('(')
+        cuadruples.append(Cuadruple('ERA_BIF', None, None, calledFunction))
     else:
         utils.showError(f'Function \'{calledFunction}\' has not been defined!')
 
@@ -515,14 +541,15 @@ def p_np_count_parameters(p):
 
     if len(parameters) != countParams:
         utils.showError(f'Function expected {len(parameters)} parameters and received {countParams}')
+    
+    countParams = 0
 
 # Generate gosub cuadruple
 def p_np_function_call_end(p):
     'np_function_call_end :'
-    global cuadruples, currentFunction, operandsStack, vars_table, totalTemps, numTemps
-
+    global cuadruples, currentFunction, operandsStack, operatorsStack, vars_table, totalTemps, numTemps
     cuadruples.append(Cuadruple('GOSUB', None, None, currentFunction))
-    operandsStack.pop()
+    operatorsStack.pop()
 
     if vars_table[currentFunction]['type'] != 'void':
         memoryPos = vars_table[programName]['vars'][currentFunction]['memory']
@@ -648,7 +675,6 @@ def p_np_add_id(p):
     global currentFunction, programName, operandsStack, typesStack
     
     operand = p[-1]
-    print('asdfasdf',operand, currentFunction)
     if operand in vars_table[currentFunction]['vars']:
         operandsStack.append(vars_table[currentFunction]['vars'][operand]['memory'])
         typesStack.append(vars_table[currentFunction]['vars'][operand]['type'])
@@ -817,7 +843,6 @@ def p_np_expression(p):
 def p_np_exp(p):
     'np_exp :'
     global operatorsStack, operandsStack, typesStack, currentFunction, cuadruples, numTemps, totalTemps
-
     if (operatorsStack):
         operator = operatorsStack[-1]
         if operator == '+' or operator == '-':
