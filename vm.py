@@ -453,6 +453,13 @@ while current < len(cuadruples):
         elif 17000 <= res < 18000:
             vmemory.tempPointersStack[-1][res - 17000] = changeToLowerCase(getValue(op1) >= getValue(op2))
     elif operator == '==':
+        operatorToString1 = str(op1)
+        operatorToString2 = str(op2)
+        if operatorToString1[0] == '(' and operatorToString1[-1] == ')':
+            op1 = getValue(int(operatorToString1[1:-1]))
+        if operatorToString2[0] == '(' and operatorToString2[-1] == ')':
+            op2 = getValue(int(operatorToString2[1:-1]))
+
         if ((3000 <= op1 < 4000 or 7000 <= op1 < 8000 or 11000 <= op1 < 12000 or 15000 <= op1 < 16000) and (3000 <= op2 < 4000 or 7000 <= op2 < 8000 or 11000 <= op2 < 12000 or 15000 <= op2 < 16000)):
             if 1000 <= res < 2000:
                 vmemory.localIntsStack[-1][res - 1000] = changeToLowerCase(changeToUpperCase(getValue(op1)) == changeToUpperCase(getValue(op2)))
@@ -508,6 +515,13 @@ while current < len(cuadruples):
             elif 17000 <= res < 18000:
                 vmemory.tempPointersStack[-1][res - 17000] = changeToLowerCase(getValue(op1) == getValue(op2))
     elif operator == '<>':
+        operatorToString1 = str(op1)
+        operatorToString2 = str(op2)
+        if operatorToString1[0] == '(' and operatorToString1[-1] == ')':
+            op1 = getValue(int(operatorToString1[1:-1]))
+        if operatorToString2[0] == '(' and operatorToString2[-1] == ')':
+            op2 = getValue(int(operatorToString2[1:-1]))
+
         if ((3000 <= op1 < 4000 or 7000 <= op1 < 8000 or 11000 <= op1 < 12000 or 15000 <= op1 < 16000) and (3000 <= op2 < 4000 or 7000 <= op2 < 8000 or 11000 <= op2 < 12000 or 15000 <= op2 < 16000)):
             if 1000 <= res < 2000:
                 vmemory.localIntsStack[-1][res - 1000] = changeToLowerCase(changeToUpperCase(getValue(op1)) != changeToUpperCase(getValue(op2)))
@@ -660,7 +674,7 @@ while current < len(cuadruples):
             utils.showError('Index out of bounds!')
     elif operator == 'ERA':
         currentFunction = res
-
+        
         for i in range(0, vars_table[currentFunction]['noVars']['int'] + vars_table[currentFunction]['noParams']['int']):
             vmemory.localInts.append(None)
         for i in range(0, vars_table[currentFunction]['noVars']['float'] + vars_table[currentFunction]['noParams']['float']):
@@ -687,23 +701,25 @@ while current < len(cuadruples):
         parameter = op1
         idx = int(res[-1]) - 1
        
-        if 1000 <= parameter < 2000 or 5000 <= parameter < 6000 or 9000 <= parameter < 10000 or 13000 <= parameter < 14000:
-            vmemory.localInts[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 1000] = getValue(parameter)
-        if 2000 <= parameter < 3000 or 6000 <= parameter < 7000 or 10000 <= parameter < 11000 or 14000 <= parameter < 15000:
-            vmemory.localFloats[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 2000] = getValue(parameter)
-        if 3000 <= parameter < 4000 or 7000 <= parameter < 8000 or 11000 <= parameter < 12000 or 15000 <= parameter < 16000:
-            vmemory.localBools[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 3000] = getValue(parameter)
-        if 4000 <= parameter < 5000 or 8000 <= parameter < 9000 or 12000 <= parameter < 13000 or 16000 <= parameter < 17000:
-            vmemory.localStrings[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 4000] = getValue(parameter)
+        if (len(parameters) > 0):
+            if 1000 <= parameter < 2000 or 5000 <= parameter < 6000 or 9000 <= parameter < 10000 or 13000 <= parameter < 14000:
+                vmemory.localInts[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 1000] = getValue(parameter)
+            if 2000 <= parameter < 3000 or 6000 <= parameter < 7000 or 10000 <= parameter < 11000 or 14000 <= parameter < 15000:
+                vmemory.localFloats[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 2000] = getValue(parameter)
+            if 3000 <= parameter < 4000 or 7000 <= parameter < 8000 or 11000 <= parameter < 12000 or 15000 <= parameter < 16000:
+                vmemory.localBools[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 3000] = getValue(parameter)
+            if 4000 <= parameter < 5000 or 8000 <= parameter < 9000 or 12000 <= parameter < 13000 or 16000 <= parameter < 17000:
+                vmemory.localStrings[vars_table[currentFunction]['vars'][parameters[idx]]['memory'] - 4000] = getValue(parameter)
 
-        vmemory.resetLocalMemory()
-        vmemory.resetTempMemory()
     elif operator == 'GOSUB':
         destination = res
         
         callsStack.append(current)
         functionsStack.append(currentFunction)
         currentFunction = destination
+
+        vmemory.resetLocalMemory()
+        vmemory.resetTempMemory()
         
         current = vars_table[destination]['cuadruple']
         continue
@@ -723,7 +739,7 @@ while current < len(cuadruples):
                 vmemory.globalBools[memoryPos - 7000] = getValue(res)
             elif currentFunctionType == 'string':
                 vmemory.globalStrings[memoryPos - 8000] = getValue(res)
-        
+
         vmemory.localIntsStack.pop()
         vmemory.localFloatsStack.pop()
         vmemory.localBoolsStack.pop()

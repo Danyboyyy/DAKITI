@@ -22,3 +22,6 @@ Mapa de Memoria de ejecución para la Máquina Virtual. Máquina Virtual: Ejecuc
 
 ## Avance 7:
 Generación de Código de Arreglos. Máquina Virtual: Ejecución de Estatutos Condicionales y Arreglos. Para correr el parser ejecutar el comando "python vm.py <nombre_del_archivo.dak>"
+
+## Avance 8:
+Avance de la documentación. Generación de Código y Máquina Virtual para una aplicación en particular. Para correr el parser ejecutar el comando "python vm.py <nombre_del_archivo.dak>"

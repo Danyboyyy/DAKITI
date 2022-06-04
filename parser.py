@@ -1,5 +1,4 @@
 import sys
-from traceback import print_stack
 import ply.yacc as yacc
 from lexer import tokens
 from collections import deque
@@ -370,7 +369,8 @@ def p_np_program_end(p):
 
 def p_np_ser_main(p):
     'np_set_main :'
-    global cuadruples
+    global cuadruples, currentFunction
+    currentFunction = programName
     vmemory.freeLocalMemory()
     vmemory.freeTempMemory()
     cuadruples[0].res = len(cuadruples)
@@ -586,7 +586,7 @@ def p_np_add_variable(p):
 # Adding an array to the symbols table
 def p_np_add_array(p):
     'np_add_array :'
-    global currentType, currentVar, currentArraySize
+    global currentType, currentVar, currentArraySize, numVars
 
     currentVar = p[-5]
     currentArraySize = p[-3]
@@ -598,6 +598,7 @@ def p_np_add_array(p):
 
     if currentVar not in vars_table[currentFunction]['vars']:
         vars_table[currentFunction]['vars'][currentVar] = {'type': currentType, 'size': currentArraySize, 'memory': memoryPos}
+        numVars[currentType] += currentArraySize
     else:
         utils.showError(f'Variable \'{currentVar}\' has already been declared!')
 
@@ -647,7 +648,7 @@ def p_np_add_id(p):
     global currentFunction, programName, operandsStack, typesStack
     
     operand = p[-1]
-
+    print('asdfasdf',operand, currentFunction)
     if operand in vars_table[currentFunction]['vars']:
         operandsStack.append(vars_table[currentFunction]['vars'][operand]['memory'])
         typesStack.append(vars_table[currentFunction]['vars'][operand]['type'])
@@ -669,21 +670,27 @@ def p_np_add_id_array(p):
     if arr in vars_table[currentFunction]['vars']:
         if 'size' in vars_table[currentFunction]['vars'][arr]:
             cuadruples.append(Cuadruple('VERIFY', idx, constants_table['int'][0]['memory'], constants_table['int'][vars_table[currentFunction]['vars'][arr]['size']]['memory']))
+
+            memoryPos = vmemory.allocMemory('temp', 'pointer', 1)
+            cuadruples.append(Cuadruple('+', idx, constants_table['int'][vars_table[currentFunction]['vars'][arr]['memory']]['memory'], memoryPos))
+
+            operandsStack.append('(' + str(memoryPos) + ')')
+            typesStack.append(vars_table[currentFunction]['vars'][arr]['type'])
         else:
             utils.showError(f'Variable \'{arr}\' has not been declared as an array!')
     elif arr in vars_table[programName]['vars']:
         if 'size' in vars_table[programName]['vars'][arr]:
             cuadruples.append(Cuadruple('VERIFY', idx, constants_table['int'][0]['memory'], constants_table['int'][vars_table[programName]['vars'][arr]['size']]['memory']))
+
+            memoryPos = vmemory.allocMemory('temp', 'pointer', 1)
+            cuadruples.append(Cuadruple('+', idx, constants_table['int'][vars_table[programName]['vars'][arr]['memory']]['memory'], memoryPos))
+
+            operandsStack.append('(' + str(memoryPos) + ')')
+            typesStack.append(vars_table[programName]['vars'][arr]['type'])
         else:
             utils.showError(f'Variable \'{arr}\' has not been declared as an array!')
     else:
         utils.showError(f'Variable \'{arr}\' has not been declared!')
-    
-    memoryPos = vmemory.allocMemory('temp', 'pointer', 1)
-    cuadruples.append(Cuadruple('+', idx, constants_table['int'][vars_table[currentFunction]['vars'][arr]['memory']]['memory'], memoryPos))
-
-    operandsStack.append('(' + str(memoryPos) + ')')
-    typesStack.append(vars_table[currentFunction]['vars'][arr]['type'])
 
     numTemps['pointer'] += 1
     totalTemps['pointer'] += 1
@@ -962,7 +969,7 @@ def p_np_for_start(p):
     operand = p[-1]
 
     if operand in vars_table[currentFunction]['vars']:
-        if vars_table[programName]['vars'][operand]['type'] == 'int':
+        if vars_table[currentFunction]['vars'][operand]['type'] == 'int':
             operandsStack.append(vars_table[currentFunction]['vars'][operand]['memory'])
             typesStack.append('int')
         else:
