@@ -6,8 +6,8 @@ tokens = ('PROGRAM', 'FUNCTION', 'RETURN', 'INT', 'FLOAT', 'BOOL', 'STRING', 'IF
           'VARS', 'VAR_CTE_ID', 'VAR_CTE_INT', 'VAR_CTE_FLOAT', 'VAR_CTE_STRING', 'TRUE', 'FALSE',
           'PLUS', 'MINUS', 'TIMES', 'DIV', 'MOD', 'LESS_THAN', 'LESS_E_THAN', 'GREATER_THAN', 'GREATER_E_THAN',
           'EQUAL', 'EQUALS', 'NOT_EQUALS', 'AND', 'OR', 'LEFT_PAR', 'RIGHT_PAR', 'LEFT_KEY', 'RIGHT_KEY', 'LEFT_BRACK', 'RIGHT_BRACK',
-          'WHILE', 'FOR', 'IN', 'RANGE', 'VOID', 'COMMA', 'SEMI_COLON', 'END',
-          'PENUP', 'PENDOWN', 'FORWARD', 'BACKWARD', 'TURNLEFT', 'TURNRIGHT', 'DRAWCIRCLE', 'DRAWRECTANGLE', 'DRAWARC')
+          'WHILE', 'FOR', 'IN', 'RANGE', 'VOID', 'COMMA', 'SEMI_COLON',
+          'PENUP', 'PENDOWN', 'FORWARD', 'BACKWARD', 'TURNLEFT', 'TURNRIGHT', 'DRAWCIRCLE', 'DRAWRECTANGLE', 'DRAWARC', 'DONE')
 
 # Ignored characters
 t_ignore = ' \t'
@@ -33,7 +33,6 @@ reserved = {
     'in': 'IN',
     'range': 'RANGE',
     'print': 'PRINT',
-    'end': 'END',
     'penUp': 'PENUP',
     'penDown': 'PENDOWN',
     'forward': 'FORWARD',
@@ -42,7 +41,8 @@ reserved = {
     'turnLeft': 'TURNLEFT',
     'drawCircle': 'DRAWCIRCLE',
     'drawRectangle': 'DRAWRECTANGLE',
-    'drawArc': 'DRAWARC'
+    'drawArc': 'DRAWARC',
+    'done': 'DONE'
 }
 
 # Regular expressions

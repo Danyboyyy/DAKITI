@@ -23,6 +23,67 @@ class Memory:
         self.tempString = 16000
         self.tempPointer = 17000
 
+        self.localInts = []
+        self.localFloats = []
+        self.localBools = []
+        self.localStrings = []
+
+        self.globalInts = []
+        self.globalFloats = []
+        self.globalBools = []
+        self.globalStrings = []
+
+        self.constantInts = []
+        self.constantFloats = []
+        self.constantBools = []
+        self.constantStrings = []
+
+        self.tempInts = []
+        self.tempFloats = []
+        self.tempBools = []
+        self.tempStrings = []
+        self.tempPointers = []
+
+        self.localIntsStack = []
+        self.localFloatsStack = []
+        self.localBoolsStack = []
+        self.localStringsStack = []
+
+        self.tempIntsStack = []
+        self.tempFloatsStack = []
+        self.tempBoolsStack = []
+        self.tempStringsStack = []
+        self.tempPointersStack = []
+
+    def resetLocalMemory(self):
+        self.localIntsStack.append(self.localInts)
+        self.localInts = []
+
+        self.localFloatsStack.append(self.localFloats)
+        self.localFloats = []
+
+        self.localBoolsStack.append(self.localBools)
+        self.localBools = []
+
+        self.localStringsStack.append(self.localStrings)
+        self.localStrings = []
+    
+    def resetTempMemory(self):
+        self.tempIntsStack.append(self.tempInts)
+        self.tempInts = []
+
+        self.tempFloatsStack.append(self.tempFloats)
+        self.tempFloats = []
+
+        self.tempBoolsStack.append(self.tempBools)
+        self.tempBools = []
+
+        self.tempStringsStack.append(self.tempStrings)
+        self.tempStrings = []
+
+        self.tempPointersStack.append(self.tempPointers)
+        self.tempPointers = []
+
     def freeLocalMemory(self):
         self.localInt = 1000
         self.localFloat = 2000
