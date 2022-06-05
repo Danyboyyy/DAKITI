@@ -126,7 +126,7 @@ def getValue(address):
     elif 6000 <= address < 7000:
         if vmemory.globalFloats[address - 6000] == None:
             utils.showError('Variable does not have a value!')
-        return vmemory.globalFloats[address - 5000]
+        return vmemory.globalFloats[address - 6000]
     elif 7000 <= address < 8000:
         if vmemory.globalBools[address - 7000] == None:
             utils.showError('Variable does not have a value!')
@@ -175,6 +175,8 @@ def getValue(address):
         return vmemory.tempPointersStack[-1][address - 17000]
     else:
         utils.showError('Memory error!')
+
+utils.displayCuadruples(cuadruples)
 
 # Change booleans to lowercase
 def changeToLowerCase(res):

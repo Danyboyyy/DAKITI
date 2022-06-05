@@ -13,7 +13,7 @@ semantic_cube = SemanticCube().semantic_cube # Semantic Cube
 
 vars_table = {} # Variables Table
 constants_table = {'int': {}, 'float': {}, 'bool': {}, 'string': {}} # Constants Table
-totalTemps = {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}
+totalTemps = {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0} # Local Temps Table
 cuadruples = [] # Cuadrulpes List
 
 # Stacks for building cuadruples
@@ -43,6 +43,7 @@ origin = ''
 controlVar = 0
 finalVar = 0
 
+# Built-in Functions
 vars_table['penUp'] = {'type': 'void', 'vars': {}, 'params': {}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
 vars_table['penDown'] = {'type': 'void', 'vars': {}, 'params': {}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
 vars_table['forward'] = {'type': 'void', 'vars': {'x': {'type': 'int', 'memory': 1000}}, 'params': {0: 'int'}, 'cuadruple': 0, 'noVars': {'int': 0, 'float': 0, 'bool': 0, 'string': 0}, 'noParams': {'int': 1, 'float': 0, 'bool': 0, 'string': 0}, 'noTemps': {'int': 0, 'float': 0, 'bool': 0, 'string': 0, 'pointer': 0}}
@@ -237,7 +238,6 @@ def p_writting_1(p):
 def p_writting_2(p):
     '''
     writting_2 : hyper_expression_1 np_writting writting_3
-               | VAR_CTE_STRING np_writting_strings writting_3
     '''
 
 def p_writting_3(p):
@@ -766,7 +766,7 @@ def p_np_add_string(p):
 
     operand = p[-1]
 
-    if operand not in constants_table['float']:
+    if operand not in constants_table['string']:
         memoryPos = vmemory.allocMemory('constant', 'string', 1)
         constants_table['string'][operand] = {'type': 'string', 'memory': memoryPos}
 
@@ -912,21 +912,6 @@ def p_np_writting(p):
     global operandsStack, cuadruples
     operand = operandsStack.pop()
     cuadruples.append(Cuadruple('PRINT', None, None, operand))
-   
-# Handle writting string
-def p_np_writting_strings(p):
-    'np_writting_strings :'
-    global cuadruples
-
-    string = p[-1]
-
-    if string not in constants_table['string']:
-        memoryPos = vmemory.allocMemory('constant', 'string', 1)
-        constants_table['string'][string] = {'type': 'string', 'memory': memoryPos}
-    else:
-        memoryPos = constants_table['string'][string]['memory']
-
-    cuadruples.append(Cuadruple('PRINT', None, None, memoryPos))
 
 # Handle conditionals
 def p_np_if_start(p):
