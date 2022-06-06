@@ -57,9 +57,9 @@ vars_table['done'] = {'type': 'void', 'vars': {}, 'params': {}, 'cuadruple': 0, 
 
 ###### PARSER #####
 # PROGRAM
-def p_program_1(p):
+def p_program(p):
     '''
-    program_1 : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN np_set_main body_1 np_program_end
+    program : PROGRAM VAR_CTE_ID np_program_start SEMI_COLON program_vars program_functions MAIN np_set_main body_1 np_program_end
     '''
 
 def p_program_vars(p):

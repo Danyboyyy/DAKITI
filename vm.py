@@ -315,7 +315,7 @@ while current < len(cuadruples):
             vmemory.tempPointersStack[-1][res - 17000] = getValue(op1) / getValue(op2)
     elif operator == '%':
         if getValue(op2) == 0:
-            utils.showError('Cannot perform a division by 0!')
+            utils.showError('Cannot perform a mod by 0!')
         
         if 1000 <= res < 2000:
             vmemory.localIntsStack[-1][res - 1000] = getValue(op1) % getValue(op2)
@@ -737,7 +737,6 @@ while current < len(cuadruples):
         vmemory.resetLocalMemory()
         vmemory.resetTempMemory()
 
-
     elif operator == 'PARAM':
         parameter = op1
         idx = int(res[-1]) - 1
@@ -777,7 +776,6 @@ while current < len(cuadruples):
                 forward(vmemory.localIntsStack[-1][0])
                 right(90)
                 forward(vmemory.localIntsStack[-1][1])
-
             elif res == 'drawArc':
                 circle(vmemory.localIntsStack[-1][0], vmemory.localIntsStack[-1][1])
             elif res == 'done':
