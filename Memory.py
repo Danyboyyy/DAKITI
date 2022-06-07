@@ -2,6 +2,7 @@ import utils
 
 class Memory:
     def __init__(self):
+        # Base address
         self.localInt = 1000
         self.localFloat = 2000
         self.localBool = 3000
@@ -96,6 +97,7 @@ class Memory:
         self.tempBool = 15000
         self.tempString = 16000
 
+    # Generates an address for a variable based on the scope, type and size of the variable. Following von Neummans architecture
     def allocMemory(self, scope, type, size):
         if scope == 'local':
             if type == 'int':

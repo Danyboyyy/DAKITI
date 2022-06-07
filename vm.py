@@ -6,6 +6,7 @@ import parser
 import utils
 from turtle import *
 
+# Reading file
 try:
     if not len(sys.argv) == 2:
         sys.exit("Try running the following command: python parser.py name_of_file.dak")
@@ -43,7 +44,7 @@ parameters = []
 parametersStack = deque()
 builtIn = False
 
-# Store global vars
+# Initialzing global memory
 for var in vars_table[programName]['vars']:
     if vars_table[programName]['vars'][var]['type'] == 'int':
         if 'size' in vars_table[programName]['vars'][var]:
@@ -70,7 +71,7 @@ for var in vars_table[programName]['vars']:
         else:
             vmemory.globalStrings.append(None)
 
-# Store constants
+# Initializing constants memory
 for type in constants_table:
     for constant in constants_table[type]:
         if type == 'int':
@@ -82,7 +83,7 @@ for type in constants_table:
         if type == 'string':
             vmemory.constantStrings.append(constant)
 
-# Store temps
+# Initializing temp memory for main function
 for i in range(0, totalTemps['int']):
     vmemory.tempInts.append(None)
 for i in range(0, totalTemps['float']):
@@ -176,8 +177,6 @@ def getValue(address):
     else:
         utils.showError('Memory error!')
 
-utils.displayCuadruples(cuadruples)
-
 # Change booleans to lowercase
 def changeToLowerCase(res):
     if res == True:
@@ -196,6 +195,7 @@ def changeToUpperCase(res):
     else:
         utils.showError('An error ocurred!')
 
+# Executing cuadruples
 while current < len(cuadruples):
     operator = cuadruples[current].operator
     op1 = cuadruples[current].op1
@@ -680,6 +680,7 @@ while current < len(cuadruples):
         currentFunction = res
         functionsStack.append(currentFunction)
 
+        # Initializing memory space for local variables and parameters of function
         for i in range(0, vars_table[currentFunction]['noVars']['int'] + vars_table[currentFunction]['noParams']['int']):
             vmemory.localInts.append(None)
         for i in range(0, vars_table[currentFunction]['noVars']['float'] + vars_table[currentFunction]['noParams']['float']):
@@ -688,7 +689,8 @@ while current < len(cuadruples):
             vmemory.localBools.append(None)
         for i in range(0, vars_table[currentFunction]['noVars']['string'] + vars_table[currentFunction]['noParams']['string']):
             vmemory.localStrings.append(None)
-        
+
+        # Initializing memory space for temporal variables of function
         for i in range(0, vars_table[currentFunction]['noTemps']['int']):
             vmemory.tempInts.append(None)
         for i in range(0, vars_table[currentFunction]['noTemps']['float']):
@@ -703,14 +705,12 @@ while current < len(cuadruples):
         parameters = list(vars_table[currentFunction]['vars'])
         parametersStack.append(parameters)
 
-        vmemory.resetLocalMemory()
-        vmemory.resetTempMemory()
-
-    elif operator == 'ERA_BIF':
+    elif operator == 'ERA_BIF': # Era for built in functions
         builtIn = True
         currentFunction = res
         functionsStack.append(currentFunction)
 
+        # Initializing memory space for local variables and parameters of function
         for i in range(0, vars_table[currentFunction]['noVars']['int'] + vars_table[currentFunction]['noParams']['int']):
             vmemory.localInts.append(None)
         for i in range(0, vars_table[currentFunction]['noVars']['float'] + vars_table[currentFunction]['noParams']['float']):
@@ -720,6 +720,7 @@ while current < len(cuadruples):
         for i in range(0, vars_table[currentFunction]['noVars']['string'] + vars_table[currentFunction]['noParams']['string']):
             vmemory.localStrings.append(None)
         
+        # Initializing memory space for temporal variables of function
         for i in range(0, vars_table[currentFunction]['noTemps']['int']):
             vmemory.tempInts.append(None)
         for i in range(0, vars_table[currentFunction]['noTemps']['float']):
@@ -733,27 +734,28 @@ while current < len(cuadruples):
 
         parameters = list(vars_table[currentFunction]['vars'])
         parametersStack.append(parameters)
-
-        vmemory.resetLocalMemory()
-        vmemory.resetTempMemory()
 
     elif operator == 'PARAM':
         parameter = op1
         idx = int(res[-1]) - 1
 
+         # Adding values of parameters to the local memory
         if (len(parametersStack[-1]) > 0):
             if 1000 <= parameter < 2000 or 5000 <= parameter < 6000 or 9000 <= parameter < 10000 or 13000 <= parameter < 14000:
-                vmemory.localIntsStack[-1][vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 1000] = getValue(parameter)
+                vmemory.localInts[vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 1000] = getValue(parameter)
             if 2000 <= parameter < 3000 or 6000 <= parameter < 7000 or 10000 <= parameter < 11000 or 14000 <= parameter < 15000:
-                vmemory.localFloats[-1][vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 2000] = getValue(parameter)
+                vmemory.localFloats[vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 2000] = getValue(parameter)
             if 3000 <= parameter < 4000 or 7000 <= parameter < 8000 or 11000 <= parameter < 12000 or 15000 <= parameter < 16000:
-                vmemory.localBools[-1][vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 3000] = getValue(parameter)
+                vmemory.localBools[vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 3000] = getValue(parameter)
             if 4000 <= parameter < 5000 or 8000 <= parameter < 9000 or 12000 <= parameter < 13000 or 16000 <= parameter < 17000:
-                vmemory.localStrings[-1][vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 4000] = getValue(parameter)
+                vmemory.localStrings[vars_table[currentFunction]['vars'][parametersStack[-1][idx]]['memory'] - 4000] = getValue(parameter)
 
     elif operator == 'GOSUB':
+        # Pushing local and temporal memory to the stack
+        vmemory.resetLocalMemory()
+        vmemory.resetTempMemory()
         destination = res
-        if builtIn:
+        if builtIn: # Executing built in functions
             if res == 'penUp':
                 penup()
             elif res == 'penDown':
@@ -780,6 +782,18 @@ while current < len(cuadruples):
                 circle(vmemory.localIntsStack[-1][0], vmemory.localIntsStack[-1][1])
             elif res == 'done':
                 done()
+
+            # Deleting local and temporal memory
+            vmemory.localIntsStack.pop()
+            vmemory.localFloatsStack.pop()
+            vmemory.localBoolsStack.pop()
+            vmemory.localStringsStack.pop()
+
+            vmemory.tempIntsStack.pop()
+            vmemory.tempFloatsStack.pop()
+            vmemory.tempBoolsStack.pop()
+            vmemory.tempStringsStack.pop()
+            vmemory.tempPointersStack.pop()
         else:
             destination = res
             callsStack.append(current)
@@ -794,6 +808,7 @@ while current < len(cuadruples):
         if currentFunctionType != 'void':
             memoryPos = vars_table[programName]['vars'][currentFunction]['memory']
 
+        # Adding the return value to the global variable with the name of the function (parche guadalupano)
         if res != None:
             if currentFunctionType == 'int':
                 vmemory.globalInts[memoryPos - 5000] = getValue(res)
@@ -804,6 +819,7 @@ while current < len(cuadruples):
             elif currentFunctionType == 'string':
                 vmemory.globalStrings[memoryPos - 8000] = getValue(res)
 
+        # Deleting local and temporal memory
         vmemory.localIntsStack.pop()
         vmemory.localFloatsStack.pop()
         vmemory.localBoolsStack.pop()
@@ -823,6 +839,8 @@ while current < len(cuadruples):
 
         continue
     elif operator == 'ENDFUNC':
+
+        # Deleting local and temporal memory
         vmemory.localIntsStack.pop()
         vmemory.localFloatsStack.pop()
         vmemory.localBoolsStack.pop()
